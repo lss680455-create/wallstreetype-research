@@ -1,0 +1,120 @@
+{
+  "as_of": {
+    "unitree_quote": "20260909161435",
+    "fx_usd_cny": 6.6977
+  },
+  "unitree": {
+    "ticker": "688836.SH",
+    "name": "宇树科技-W",
+    "price_cny": 513.93,
+    "prev_close": 523.68,
+    "change_pct": -1.86,
+    "market_cap_cny_100m": 2078.66,
+    "market_cap_cny_bn": 207.87,
+    "market_cap_usd_bn": 31.04,
+    "shares_total": 404464340,
+    "pe_ttm": 355.79,
+    "pb": 23.63,
+    "ps_ttm": 100.1,
+    "pe_ttm_on_ttm_np": 355.8,
+    "rev_ttm_cny_100m": 20.76,
+    "np_ttm_cny_100m": 5.84,
+    "wk52_high": 1100.0,
+    "wk52_low": 508.88,
+    "issue_price": 150.8,
+    "day1_open": 1100.0,
+    "x_issue_price": 3.41,
+    "pct_from_day1_open": -53.3,
+    "turnover_pct": 10.69,
+    "float_mv_cny_100m": 154.63,
+    "fy2022_rev_cny_100m": 1.23,
+    "fy2022_np_cny_100m": -0.22,
+    "fy2023_rev_cny_100m": 1.59,
+    "fy2023_np_cny_100m": -0.11,
+    "fy2023_rev_yoy_pct": 29.5,
+    "fy2024_rev_cny_100m": 3.93,
+    "fy2024_np_cny_100m": 0.95,
+    "fy2024_rev_yoy_pct": 146.8,
+    "fy2025_rev_cny_100m": 16.99,
+    "fy2025_np_cny_100m": 2.78,
+    "fy2025_deducted_np_cny_100m": 5.91,
+    "fy2025_gm_pct": 60.4,
+    "fy2025_rev_yoy_pct": 332.6,
+    "h1_2026_rev_cny_100m": 11.52,
+    "h1_2026_rev_yoy_pct": 48.5,
+    "h1_2026_np_cny_100m": 2.74,
+    "h1_2026_gm_pct": 56.0,
+    "rev_cagr_23_25_pct": 226.8
+  },
+  "nvidia": {
+    "ticker": "NVDA",
+    "price_usd": 223.67,
+    "market_cap_usd_tn": 5.4,
+    "market_cap_cny_tn": 36.17,
+    "rev_ttm_usd_bn": 302.97,
+    "rev_ttm_cny_tn": 2.03,
+    "np_ttm_usd_bn": 190.8,
+    "np_ttm_cny_tn": 1.28,
+    "trailing_pe": 28.3,
+    "forward_pe": 14.4,
+    "ps_ttm": 17.8,
+    "net_margin_pct": 63.7,
+    "rev_growth_pct": 105.9,
+    "target_mean": 327.6544,
+    "target_high": 515.0,
+    "target_low": 180.0,
+    "n_analysts": 57
+  },
+  "gaps": {
+    "market_cap_x": 174.0,
+    "revenue_x": 978.0,
+    "net_income_x": 2187.0,
+    "price_to_match_mktcap_cny": 89437.0,
+    "unitree_rev_share_of_nvda_pct": 0.102
+  },
+  "catch_up_years": {
+    "100%": 9.9,
+    "60%": 14.6,
+    "48%": 17.4,
+    "30%": 26.2,
+    "20%": 37.8
+  },
+  "mktcap_parity": {
+    "PE20_NM20": {
+      "need_net_income_cny_tn": 1.81,
+      "need_revenue_cny_tn": 9.04,
+      "x_today_revenue": 4357.0,
+      "years_at_60pct": 17.8
+    },
+    "PE20_NM30": {
+      "need_net_income_cny_tn": 1.81,
+      "need_revenue_cny_tn": 6.03,
+      "x_today_revenue": 2904.0,
+      "years_at_60pct": 17.0
+    },
+    "PE30_NM20": {
+      "need_net_income_cny_tn": 1.21,
+      "need_revenue_cny_tn": 6.03,
+      "x_today_revenue": 2904.0,
+      "years_at_60pct": 17.0
+    },
+    "PE30_NM30": {
+      "need_net_income_cny_tn": 1.21,
+      "need_revenue_cny_tn": 4.02,
+      "x_today_revenue": 1936.0,
+      "years_at_60pct": 16.1
+    },
+    "PE40_NM20": {
+      "need_net_income_cny_tn": 0.9,
+      "need_revenue_cny_tn": 4.52,
+      "x_today_revenue": 2178.0,
+      "years_at_60pct": 16.4
+    },
+    "PE40_NM30": {
+      "need_net_income_cny_tn": 0.9,
+      "need_revenue_cny_tn": 3.01,
+      "x_today_revenue": 1452.0,
+      "years_at_60pct": 15.5
+    }
+  }
+}

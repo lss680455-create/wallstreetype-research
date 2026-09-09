@@ -8,7 +8,7 @@ conversion step is a standalone Python script with no runtime dependencies
 beyond the packages listed below.
 
 ```
-wallstreet-research/
+wallstreetype-research/
 ├── templates/
 │   ├── report_template.md      ← Markdown MASTER template ({{PLACEHOLDER}}-based)
 │   └── md_to_docx.py           ← standalone converter: .md → .docx (→ .pdf)

@@ -94,7 +94,8 @@ def kline_volume_chart(
         df, type="candle", style=style, volume=True,
         mav=mav, addplot=aps, panel_ratios=panel_ratios,
         figsize=figsize, returnfig=True,
-        datetime_format="%Y-%m", xrotation=0,
+        datetime_format="%m-%d" if len(df) <= 45 else "%Y-%m",
+        xrotation=45 if len(df) <= 45 else 0,
         ylabel="Price", ylabel_lower="Volume",
         tight_layout=False,
     )
@@ -260,13 +261,22 @@ def financial_trend_chart(
     b2 = ax1.bar(x + w / 2, net_profit, width=w, color=cs.GOLD,
                  label=f"Net profit ({unit})", zorder=3)
 
-    # Value labels above the bars.
+    # Value labels above positive bars, below negative ones.
+    lab_pad = max(revenue.max(), 0.01) * 0.012
     for xi, v in zip(x - w / 2, revenue):
-        ax1.text(xi, v + max(revenue) * 0.012, f"{v:.1f}", ha="center",
+        ax1.text(xi, v + (lab_pad if v >= 0 else -lab_pad), f"{v:.1f}", ha="center",
+                 va="bottom" if v >= 0 else "top",
                  fontsize=6.8, color=cs.NAVY_DARK)
     for xi, v in zip(x + w / 2, net_profit):
-        ax1.text(xi, v + max(revenue) * 0.012, f"{v:.1f}", ha="center",
+        ax1.text(xi, v + (lab_pad if v >= 0 else -lab_pad), f"{v:.1f}", ha="center",
+                 va="bottom" if v >= 0 else "top",
                  fontsize=6.8, color=cs.NAVY_DARK)
+
+    # Left axis must show negative net profit and must not clip the tallest bar.
+    lo = min(0.0, float(np.nanmin(net_profit)))
+    hi = max(float(np.nanmax(revenue)), float(np.nanmax(net_profit)), 0.01)
+    span = hi - lo
+    ax1.set_ylim(lo - span * 0.06, hi + span * 0.16)
 
     # YoY growth on secondary axis.
     ax2 = ax1.twinx()
@@ -275,8 +285,12 @@ def financial_trend_chart(
              label="Revenue YoY (%)", zorder=4)
     ax2.axhline(0, color=cs.GRAY, lw=0.8, ls="--", alpha=0.7)
     ax2.set_ylabel("Revenue YoY (%)", fontsize=8.5, color=cs.GRAY)
-    ymax = max(abs(v) for v in yoy_growth) * 1.25 or 10
-    ax2.set_ylim(-ymax, ymax)
+    finite = np.asarray(yoy_growth, dtype=float)
+    finite = finite[np.isfinite(finite)]
+    if finite.size:
+        ymax = max(abs(finite).max() * 1.25, 10.0)
+        ymin = min(finite.min() * 1.25, 0.0)
+        ax2.set_ylim(ymin - ymax * 0.08, ymax)
     ax2.tick_params(colors=cs.GRAY, labelsize=8)
 
     ax1.set_xticks(x)
@@ -314,12 +328,27 @@ def scenario_bar_chart(
     Colors follow convention: bull=green, base=navy, bear=red.
     """
     cs.apply_theme()
-    order = {"Bull": 0, "Base": 1, "Bear": 2}
-    sc = sorted(scenarios, key=lambda s: order.get(s["name"], 9))
+
+    def _scenario_key(name: str) -> int:
+        """Map a scenario label to its convention slot.
+
+        Matches English (Bull/Base/Bear) and Chinese (牛市/基准/熊市) labels,
+        case-insensitively, so localised reports still get the right colours.
+        """
+        n = name.lower()
+        if "bull" in n or "牛" in n:
+            return 0
+        if "bear" in n or "熊" in n:
+            return 2
+        if "base" in n or "neutral" in n or "基准" in n or "中性" in n:
+            return 1
+        return 9
+
+    sc = sorted(scenarios, key=lambda s: _scenario_key(s["name"]))
     names = [f"{s['name']} · {s['prob'] * 100:.0f}%" for s in sc]
     vals = np.array([s["value"] for s in sc])
-    cols = {"Bull": cs.UP_GREEN, "Base": cs.NAVY, "Bear": cs.DOWN_RED}
-    colors = [cols.get(s["name"], cs.NAVY_MID) for s in sc]
+    cols = {0: cs.UP_GREEN, 1: cs.NAVY, 2: cs.DOWN_RED}
+    colors = [cols.get(_scenario_key(s["name"]), cs.NAVY_MID) for s in sc]
 
     ev = float(sum(s["prob"] * s["value"] for s in sc))
 
@@ -336,25 +365,28 @@ def scenario_bar_chart(
                 va="center", fontsize=9, color=cs.NAVY_DARK, fontweight="bold")
         if s.get("desc"):
             ax.text(max(vals) * 0.015, yi - 0.32, s["desc"],
-                    va="top", fontsize=7, color=cs.GRAY)
+                    va="top", fontsize=7.8, color=cs.TEXT, alpha=0.78)
 
     # Probability-weighted target (EV) and current price reference lines.
+    # Both are labelled in the legend rather than inline, so the vertical
+    # markers can never collide with the per-bar descriptions.
     ax.axvline(ev, color=cs.GOLD, lw=1.6, ls="--", zorder=4)
-    ax.text(ev, len(sc) - 0.10, f"Probability-weighted target {ev:.1f}",
-            ha="left", va="bottom", fontsize=8.5, color=cs.GOLD,
-            fontweight="bold", rotation=90)
     if current_price is not None:
         ax.axvline(current_price, color=cs.GRAY, lw=1.0, ls=":", zorder=4)
-        ax.text(current_price, -0.30, f"Last price {current_price:.1f}",
-                ha="center", va="top", fontsize=7.5, color=cs.GRAY)
 
     ax.set_xlim(0, max(vals) * 1.22)
     ax.set_ylim(-0.95, len(sc) - 0.25)   # room for per-bar desc text below lowest bar
     ax.set_xlabel("Target price", fontsize=8.5, color=cs.GRAY)
 
     from matplotlib.patches import Patch
+    from matplotlib.lines import Line2D
     handles = [Patch(facecolor=c, label=f"{s['name']} ({s['prob']*100:.0f}%)")
                for s, c in zip(sc, colors)]
+    handles.append(Line2D([0], [0], color=cs.GOLD, lw=1.6, ls="--",
+                          label=f"Probability-weighted target {ev:.1f}"))
+    if current_price is not None:
+        handles.append(Line2D([0], [0], color=cs.GRAY, lw=1.0, ls=":",
+                              label=f"Last price {current_price:,.2f}"))
     leg = ax.legend(handles=handles, loc="lower right", fontsize=8,
                     frameon=False, ncol=3)
     for t in leg.get_texts():

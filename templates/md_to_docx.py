@@ -939,7 +939,7 @@ class DocxRenderer:
         if m.get("52wk_range"):
             bits.append(f"52-Week Range  {m['52wk_range']}")
         if m.get("pe_ntm"):
-            bits.append(f"NTM P/E  {m['pe_ntm']}")
+            bits.append(f"P/E  {m['pe_ntm']}")
         if m.get("horizon"):
             bits.append(f"Horizon  {m['horizon']}")
         if not bits:

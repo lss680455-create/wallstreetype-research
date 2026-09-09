@@ -1,5 +1,5 @@
 ---
-name: wallstreet-research
+name: wallstreetype-research
 description: >
   Use when 需要生成华尔街风格股票研报/深度投研报告/投资研究流水线。
   Full-chain, agent-agnostic equity research: S0 task intake (layout template + focus questionnaire),
@@ -16,7 +16,7 @@ metadata:
     related_skills: [wall-street-research-methodology, equity-research]
 ---
 
-# Wall Street Research（华尔街研报全链路）
+# wallstreetype-research（华尔街研报全链路）
 
 自包含、agent 无关的研报流水线：输入标的/市场/语言/深度档位 → 出华尔街风格研报（Markdown→Word/PDF）。
 方法论源自 **100 篇华尔街研报**（10 组 × 10 篇凝练），数字走**真实双市场数据**，图表为机构风格，版式为卖方范式。
