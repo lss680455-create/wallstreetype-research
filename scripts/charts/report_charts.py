@@ -349,6 +349,7 @@ def scenario_bar_chart(
                 ha="center", va="top", fontsize=7.5, color=cs.GRAY)
 
     ax.set_xlim(0, max(vals) * 1.22)
+    ax.set_ylim(-0.95, len(sc) - 0.25)   # room for per-bar desc text below lowest bar
     ax.set_xlabel("Target price", fontsize=8.5, color=cs.GRAY)
 
     from matplotlib.patches import Patch

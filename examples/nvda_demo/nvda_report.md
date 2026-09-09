@@ -49,7 +49,7 @@ copyright_year: "2026"
 
 # Executive Summary
 
-We initiate coverage of **{{company}} ({{ticker}}, {{exchange}})** with an **{{rating}}** rating and a twelve-month target of **US${{target_price}}** (range $300–$370), **{{upside}} upside** from the September 10, 2026 close of ${{current_price}}, 6% above the 57-analyst consensus mean of $327.65 (Yahoo Finance, financialData). The core variable is AI-capex durability: at $224.22 the stock trades at **14.4x forward earnings** (Yahoo Finance, quote) while revenue grows **+105.9% y/y** (Yahoo Finance, financialData) — a ~31% discount to the 20.9x forward peer median (Yahoo Finance, peers). If growth merely holds above +50% y/y the discount closes; if it breaks, the consensus low of $180 bounds the downside.
+We initiate coverage of **NVIDIA Corporation (NVDA, NASDAQ)** with an **OVERWEIGHT (BUY)** rating and a twelve-month target of **US$347** (range $300–$370), **+55% upside** from the September 10, 2026 close of $224.22, 6% above the 57-analyst consensus mean of $327.65 (Yahoo Finance, financialData). The core variable is AI-capex durability: at $224.22 the stock trades at **14.4x forward earnings** (Yahoo Finance, quote) while revenue grows **+105.9% y/y** (Yahoo Finance, financialData) — a ~31% discount to the 20.9x forward peer median (Yahoo Finance, peers). If growth merely holds above +50% y/y the discount closes; if it breaks, the consensus low of $180 bounds the downside.
 
 **What's changed.** Initiation: no prior rating or target. We establish the FY2023–FY2026 baseline (revenue $26.97B→$215.94B; net income $4.37B→$120.07B; Yahoo Finance, income statement history) and target $347 above consensus mean $327.65 on data, not multiple hope: forward EPS $15.52 vs $7.90 trailing, and a forward P/E 31% below the peer median (Yahoo Finance, financialData / quote / peers).
 
@@ -150,7 +150,7 @@ Source: Yahoo Finance quote and financialData, September 10, 2026.
 
 ## Target Price Derivation
 
-Base $327.65 implies 21.1x forward — the 20.9x peer median, i.e. no premium for growth leadership (Yahoo Finance, financialData / peers). Our weighted $347 (Exhibit 5) implies 22.4x on current forward EPS — a modest premium, 32% below AMD's 33.7x, equivalent to the peer median on forward EPS up ~10% within a +127.8% earnings-growth regime (Yahoo Finance). **Upside/(downside): +34% to +65% across $300–$370 (+55% weighted).**
+Base $327.65 implies 21.1x forward — the 20.9x peer median, i.e. no premium for growth leadership (Yahoo Finance, financialData / peers). Our weighted $347 (Exhibit 5) implies 22.4x on current forward EPS — a modest premium, 34% below AMD's 33.7x, equivalent to the peer median on forward EPS up ~10% within a +127.8% earnings-growth regime (Yahoo Finance). **Upside/(downside): +34% to +65% across $300–$370 (+55% weighted).**
 
 # Bear Case — Stated in Full, Then Answered
 
@@ -207,7 +207,7 @@ The framework outlives the point target: re-derive on early upside, downgrade on
 
 # Recommendation
 
-**OVERWEIGHT (BUY).** Expected to outperform the semiconductor coverage universe over the next 12 months. Our US$347 target (range $300–$370) sits 6% above the 57-analyst consensus mean of $327.65 (Yahoo Finance, financialData) and implies +59% upside from $224.22.
+**OVERWEIGHT (BUY).** Expected to outperform the semiconductor coverage universe over the next 12 months. Our US$347 target (range $300–$370) sits 6% above the 57-analyst consensus mean of $327.65 (Yahoo Finance, financialData) and implies +55% upside from $224.22.
 
 **Rating definitions** (this firm's scale — Overweight/Equal-weight/Underweight, Buy-equivalent):
 
@@ -236,7 +236,7 @@ I, The Research Team, hereby certify that all of the views expressed in this rep
 
 **Distribution.** This report may not be reproduced, redistributed, or republished, in whole or in part, without the prior written consent of Wall Street Research.
 
-© {{copyright_year}} Wall Street Research. All rights reserved.
+© 2026 Wall Street Research. All rights reserved.
 
 # Appendix
 
@@ -248,6 +248,8 @@ I, The Research Team, hereby certify that all of the views expressed in this rep
 | Equal-weight / Hold | 158 | 43 | 42 |
 | Underweight / Sell | 56 | 15 | 10 |
 | Total | 366 | 100 | 99 |
+
+*Components may not sum to 100% due to rounding. Illustrative distribution only.*
 
 ## B. Glossary
 

@@ -39,7 +39,13 @@
 3. Cite evidence as `[S###]`; `evidence_refs` must exist in `data/sources.json` (or be flagged).
 4. If a source is unreachable or data is missing: **say so explicitly** — never guess numbers.
 5. Stay inside your lens (§6 of the pipeline doc). Crossing lenses is the #1 quality defect.
-6. Report back in the structured format at the end of your brief.
+6. **硬规则 / HARD RULE — 数字引用表 (number reference table):** every number that appears in analysis or the
+   final report must (a) come from `data/` (a data file in the run), and (b) be registered in `data/numbers.json`
+   数字引用表 with its data file + path + display format + tolerance. **数字未登记引用表 = 违规范** — an
+   unregistered core number is a violation, not a style choice. The Data Engineer maintains the initial registry
+   at S3; writers PROPOSE additions (label, source path, display) that the main agent accepts at S5; the
+   S9 Proofing stage machine-checks the registry (J1) — an unregistered number that reaches the report fails G7.
+7. Report back in the structured format at the end of your brief.
 
 ---
 
@@ -67,7 +73,8 @@ OUTPUTS (the ONLY files you may write):
 3. {{run_root}}/data/fundamentals.json    — financial statements / key metrics for {{ticker}} ({{market}} GAAP/IFRS where applicable)
 4. {{run_root}}/data/price_history.csv    — price/volume series (24 months min; columns: date, open, high, low, close, volume, currency)
 5. {{run_root}}/data/estimates.json       — consensus estimates / company guidance / analyst targets (if findable)
-6. Optional market-specific files: {{run_root}}/data/<market>_<topic>.json (e.g. regulatory, macro, peers)
+6. {{run_root}}/data/numbers.json         — 数字引用表 (number reference table): every key number (price, target, EPS, market cap, margins, growth...) as {"id": "...", "file": "...", "path": "...", "decimals": 2, "display_fmt" or "suffix"...}. Consumed by scripts/check/build_check.py at S9. 数字未登记引用表=违规范 — the registry is the machine-enforced memory of the data layer.
+7. Optional market-specific files: {{run_root}}/data/<market>_<topic>.json (e.g. regulatory, macro, peers)
 
 STEPS:
 1. Fetch primary sources first: regulatory filings (10-K/20-F/年报/业绩公告), official exchange data, company IR. Grade each source.
@@ -81,10 +88,12 @@ STEPS:
 EVIDENCE RULES:
 - Grade scale: primary (regulator/company filings) > secondary (exchange data, official statistics) > tertiary (reputable media, analyst reports) > unverified (blogs, forums — label clearly, exclude from evidence unless nothing better exists).
 - Every number in fundamentals.json carries: source id, as-of date, currency, definition/scope (denominator, period).
+- Every number DESTINED for analysis must be registered in numbers.json (数字引用表) with file+path+tolerance — unregistered numbers will fail the S9 machine gate.
 
 QUALITY CHECKLIST (all must pass before you finish):
-[ ] manifest.json + sources.json exist and are valid JSON
+[ ] manifest.json + sources.json + numbers.json exist and are valid JSON
 [ ] every source cited anywhere in data/* resolves in sources.json
+[ ] every key number used by analysis is registered in numbers.json (file, path, decimals, display format)
 [ ] price_history.csv has no gaps > 5 trading days unannotated; currency column present
 [ ] fundamentals.json numbers have source + as-of + definition; no bare numbers
 [ ] estimates.json entries carry provider + date, or state "not found"
@@ -193,6 +202,9 @@ EVIDENCE RULES:
 - Hard data > surveys > hearsay > opinions. Do not present an opinion as a fact — use type=opinion.
 - "Consensus" claims need provider+date. TAM must come with source, year, and method.
 - Confidence must reflect evidence grade: primary-sourced facts ≥ 0.8; single-source interpretations ≤ 0.6.
+- HARD RULE: every number in your narrative must trace to data/* (else flag type=assumption). 数字未登记引用表=违规范 —
+  propose each figure for data/numbers.json in your claims (`value_source: [file, path, display]`); the main agent
+  registers accepted ones at S5. A number that is not in the 数字引用表 by S9 fails gate G7.
 
 QUALITY CHECKLIST (all must pass before you finish):
 [ ] industry.md covers: model / structure / moat / drivers / regulation / peers
@@ -305,6 +317,9 @@ EVIDENCE RULES:
 - Model precision must not exceed source-data quality — if fundamentals are rough, widen ranges and lower confidence.
 - Every model input has a source id or is explicitly flagged assumption.
 - Never present a target price as evidence — it is a derived conclusion.
+- HARD RULE: every number (model inputs, scenario prices, implied multiples) must trace to data/* and be proposed
+  for data/numbers.json (数字引用表) with file+path+display. 数字未登记引用表=违规范 — unregistered numbers fail
+  S9 gate G7 before delivery.
 
 QUALITY CHECKLIST (all must pass before you finish):
 [ ] valuation.md has: 3Y model, scenario table (base/bull/bear + probabilities + triggers), priced-in analysis, target range with derivation, catalyst timeline
@@ -512,6 +527,8 @@ RULES:
 3. Titles/axis labels in report language ({{language}}); currency labels explicit.
 4. A figure that would contradict an accepted claim or verdict = defect: skip it and report, do not "fix" by changing data.
 5. If a data file is missing: produce NO fake figure — leave a placeholder caption "figure unavailable — data gap" in manifest.
+6. HARD RULE: every value shown in a figure (axes, annotations, labels) must exist in data/numbers.json (数字引用表);
+   a figure carrying an unregistered number is a defect — flag it and do not claim it done.
 
 QUALITY CHECKLIST (all must pass before you finish):
 [ ] every planned figure id has a produced file or an explicit placeholder entry
@@ -616,6 +633,7 @@ RULES:
 4. open_questions are disclosed in the appendix — never hidden.
 5. Content fixes beyond mechanics (a wrong number, a false statement) are NOT yours: flag them in your report-back; the main agent decides.
 6. Language: report in {{language}}; keep non-English source titles as-is with [S###] refs.
+7. HARD RULE: every core number in the draft must be registered in data/numbers.json (数字引用表). 数字未登记引用表=违规范 — check each number against the registry as you assemble; flag any unregistered one in your report-back (the main agent resolves at S5/S9, where build_check.py will machine-verify registration).
 
 QUALITY CHECKLIST (all must pass before you finish):
 [ ] all skeleton sections present, in order
@@ -688,9 +706,110 @@ REPORT BACK (structured): sections written, figures embedded, any content-level 
 
 ---
 
+# 7. Proofreader / 校对员（S9，可选助手角色）
+
+- **Lens 透镜:** Compliance & polish — does the report survive the quality gate? 合规与打磨——报告能否过质量门。
+- **Stage:** S9 (assistant to the main agent; optional). **Must not:** create new analysis, change numbers, rewrite
+  prose, edit any artifact. The proofreader VERIFIES; it never edits content.
+- **Writes:** `proof/build_check.txt` (verbatim J1 output), `proof/visual_proofing.md` (J2 page checklist),
+  `proof/pages/` (rendered page images if missing).
+
+## EN — brief_proofreader.md
+
+```text
+ROLE: Proofreader (Wall Street Research pipeline, S9 quality gate assistant, leaf worker).
+MISSION: Run the G7 quality gate honestly. The report is PUBLISHED only if every check passes. You verify — you never edit content or introduce analysis.
+
+RUN CONTEXT (authoritative):
+- RUN_ROOT: {{run_root}}  |  Envelope: {{envelope_path}}
+- ticker={{ticker}}, company={{company}}, language={{language}}, depth={{depth}}
+
+INPUTS (read-only):
+- {{run_root}}/final/report.md (+ report.docx / report.pdf if converted)
+- {{run_root}}/data/numbers.json — 数字引用表 (number reference table)
+- {{run_root}}/data/* — the data layer the numbers must reconcile with
+- {{run_root}}/charts/manifest.json + charts/fig_*.png
+- scripts/check/build_check.py in the repo (the J1 machine gate)
+
+STEPS (both channels; J2 is mandatory — layout must NEVER be judged from text alone):
+1. J1 — MACHINE GATE: run `python scripts/check/build_check.py final/report.md`
+   (placeholders, Exhibit continuity+files, number reconciliation vs data JSONs, frontmatter
+   consistency target/current/upside, table structure + key rows/cells). Save output to
+   proof/build_check.txt verbatim. Exit code non-zero = FAIL.
+2. J2 — VISUAL GATE (vision-model proofing): render final/report.pdf (or docx via Word)
+   page by page to proof/pages/page_NN.png (pymupdf: get_pixmap(dpi=144)). A model WITH VISION
+   input must inspect EVERY page (cover, tables, exhibits, appendix). You may use any vision-capable
+   model / tool / human reviewer — this is agent-agnostic by design. A text-only model must hand the
+   PNGs to a vision-capable one; judging layout from text alone is FORBIDDEN and counts as gate failure.
+3. For every page, record per-item PASS/FAIL in proof/visual_proofing.md (页号 × 检查项 × PASS/FAIL):
+   text overlap / element overflow beyond margins / clipping / misalignment / images wider than the
+   text column / detached captions (caption without its figure or figure without caption) / cover
+   rating box, analyst block and key-data price block rendered / header+footer with "Page X of Y" /
+   fonts applied (incl. CJK face on Chinese content) / tables split only with repeated header row /
+   blank pages / orphaned headings / {{PLACEHOLDER}} visible anywhere.
+
+G7 CHECKLIST (verify each; report the PASS/FAIL list to the main agent):
+[ ] J1 build_check.py: exit 0, ALL CHECKS PASSED
+[ ] numbers.json covers EVERY core number in the report (数字未登记引用表=违规范 → FAIL)
+[ ] Appendix/figures: exhibits continuous 1..K, files exist
+[ ] no {{PLACEHOLDER}} residue in md/publications
+[ ] J2 visual: every page inspected by a vision-capable model; all items PASS (see step 3)
+[ ] reading pass: numbers reconcile with the 数字引用表, citations resolve, no duplicated sections
+HARD RULE: you must NOT rewrite, renumber, or "improve" any content. Any finding is reported as
+(page, item, PASS/FAIL) — the main agent dispatches fixes (typically back to S7) and asks you to re-run.
+
+LANGUAGE: notes in {{language}}; the visual checklist keys stay in the standard list above.
+BUDGET: ~{{approx_minutes}} min (J1 < 1 min; J2 dominates).
+```
+
+## ZH — brief_proofreader.md
+
+```text
+角色：校对员（华尔街研报流水线 S9 质量门助手，叶子工人）。
+任务：诚实地执行 G7 质量门。报告只有在所有检查通过后才会发布。你只核验——绝不编辑内容或引入分析。
+
+运行上下文（权威）：RUN_ROOT={{run_root}}；信封={{envelope_path}}
+标的={{ticker}}，公司={{company}}，语言={{language}}，深度={{depth}}
+
+输入（只读）：
+- {{run_root}}/final/report.md（如有 report.docx / report.pdf 一并检查）
+- {{run_root}}/data/numbers.json —— 数字引用表
+- {{run_root}}/data/* —— 数字必须与之对账的数据层
+- {{run_root}}/charts/manifest.json + charts/fig_*.png
+- 仓库 scripts/check/build_check.py（J1 机器门）
+
+步骤（双通道；J2 为强制——版式绝不允许仅凭文本判断）：
+1. J1 —— 机器门：运行 `python scripts/check/build_check.py final/report.md`
+   （占位符、Exhibit 连续性与文件存在、数字引用表与数据 JSON 对账、frontmatter 自洽
+   target/current/upside、表格结构与关键行列）。输出原样保存到 proof/build_check.txt。退出码非零 = FAIL。
+2. J2 —— 视觉门（视觉模型校对）：把 final/report.pdf（或经 Word 转换的 docx）逐页渲染到
+   proof/pages/page_NN.png（pymupdf: get_pixmap(dpi=144)）。必须由【支持视觉输入的模型】逐页检查
+   （封面、表格、图表、附录）。任何视觉能力模型/工具/人工审核均可——本设计代理无关。
+   纯文本模型必须把 PNG 交给视觉模型；仅凭文本判断版式 = 违规（门禁视为失败）。
+3. 每页在 proof/visual_proofing.md 记录逐项 PASS/FAIL（页号 × 检查项 × PASS/FAIL）：
+   文本重叠/元素溢出页边/文字截断/错位/插图超文本列宽/caption 与图分离/封面评级框、分析师块与
+   关键数据价格表是否渲染/页眉页脚含 "Page X of Y"/字体生效（中文内容检查 CJK 字形）/跨页表格是否
+   重复表头/空白页/孤行标题/任何可见 {{PLACEHOLDER}}。
+
+G7 清单（逐项核验，向主编报告 PASS/FAIL）：
+[ ] J1 build_check.py：退出码 0，ALL CHECKS PASSED
+[ ] 数字引用表覆盖报告中每一个核心数字（数字未登记引用表=违规范 → FAIL）
+[ ] 附录/图表：Exhibit 编号连续 1..K，文件真实存在
+[ ] md 与成品中无 {{PLACEHOLDER}} 残留
+[ ] J2 视觉：每一页均经视觉模型检查，所有项 PASS（见步骤 3）
+[ ] 阅读检查：数字与数字引用表对账一致、引用可解析、无重复章节
+硬规则：不得改写、重新编号或"改善"任何内容。所有发现以（页号、检查项、PASS/FAIL）上报——
+由主编派发修复（通常回到 S7），修复后再请你复跑。
+
+语言：记录用 {{language}}；视觉检查项键名保持上述标准列表。
+预算：约 {{approx_minutes}} 分钟（J1 不到 1 分钟；J2 为主）。
+```
+
+---
+
 # Main-Agent Operating Protocol / 主编操作规程（主代理，不委派）
 
-The main agent **never delegates** S1, S2, S5, S8. Summary of duties (full detail in `pipeline_orchestration.md` §8, §9, §13):
+The main agent **never delegates** S1, S2, S5, S8, S9. Summary of duties (full detail in `pipeline_orchestration.md` §8, §9, §13):
 
 1. **S1** parse input → `envelope.json` (ticker/market/language/depth/focus/budget), create run dirs.
 2. **S2** fill the 6 briefs above (resolve all `{{...}}`), write to `briefs/`.
@@ -701,13 +820,17 @@ The main agent **never delegates** S1, S2, S5, S8. Summary of duties (full detai
    build `report_skeleton`, promote accepted counter-evidence into `sources.json`, record `open_questions`; run gate G3.
 6. **S6** (unless `quick`) write figure plan → dispatch Chart Specialist; run gate G4.
 7. **S7** dispatch Layout Specialist; run gate G5.
-8. **S8** final checklist (gate G6) → publish `final/` → deliver: thesis, key numbers, risks, open questions, artifact paths.
+8. **S8** final checklist (gate G6) → publish `final/` → run S9 → deliver: thesis, key numbers, risks, open questions, artifact paths.
+9. **S9** Proofing & QC (gate G7): J1 — `python scripts/check/build_check.py final/report.md` (machine);
+   J2 — render page PNGs and run the visual checklist with a **vision-capable model** (never text-only judgment);
+   proofreader role available (brief #7). Red G7 → narrow fix (usually back to S7) → rerun J1+J2.
 
 **Main-agent discipline (never violated):**
 - 主代理绝不凭整体印象裁决——先读齐所有 artifacts，逐 claim 裁决。
 - 强制保留 minority report（共识也可能是共同错误）。
 - 不无限加轮次：预算在 envelope，超预算即降级交付并披露。
 - 不伪造证据：找不到的数据写进 open_questions，不猜数。
+- G7 红灯不发版：J1 或 J2 任一失败，先修复再发布。
 
 **One-line cheat-sheet:** S1 envelope → S2 briefs → S3 batch-3 research → G1 → S4 red team → G2 →
-S5 verdicts+minority+skeleton → G3 → S6 charts → G4 → S7 layout → G5 → S8 final checklist → deliver.
+S5 verdicts+minority+skeleton → G3 → S6 charts → G4 → S7 layout → G5 → S8 final checklist → S9 J1+J2 proofing → G7 → deliver.

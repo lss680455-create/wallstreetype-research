@@ -1,0 +1,1157 @@
+{
+ "_comment": "数字引用表 (number reference table) for the NVDA demo report. J1 machine checks: every declared number must reconcile the data JSON layer with the report text. Paths are relative to this file's directory.",
+ "data_files": [
+  "data/nvda_quote.json",
+  "data/nvda_financials.json",
+  "data/peers.json"
+ ],
+ "checks": [
+  {
+   "id": "current_price",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.regularMarketPrice",
+   "decimals": 2,
+   "tolerance": 0.005,
+   "display_fmt": "$224.22"
+  },
+  {
+   "id": "market_cap",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.marketCap",
+   "scale": 1000000000000.0,
+   "decimals": 2,
+   "suffix": "T",
+   "scope": "frontmatter"
+  },
+  {
+   "id": "shares_out",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.sharesOutstanding",
+   "scale": 1000000000.0,
+   "decimals": 2,
+   "suffix": "B",
+   "scope": "frontmatter"
+  },
+  {
+   "id": "avg_volume",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.regularMarketVolume",
+   "scale": 1000000.0,
+   "decimals": 1,
+   "suffix": "M",
+   "scope": "frontmatter"
+  },
+  {
+   "id": "fwd_pe",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.forwardPE",
+   "decimals": 1,
+   "suffix": "x"
+  },
+  {
+   "id": "trailing_pe",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.trailingPE",
+   "decimals": 1,
+   "suffix": "x"
+  },
+  {
+   "id": "price_to_book",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.priceToBook",
+   "decimals": 1,
+   "suffix": "x"
+  },
+  {
+   "id": "beta",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.defaultKeyStatistics.beta",
+   "decimals": 2
+  },
+  {
+   "id": "fwd_eps",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.defaultKeyStatistics.forwardEps",
+   "decimals": 2
+  },
+  {
+   "id": "trailing_eps",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.epsTrailingTwelveMonths",
+   "decimals": 2
+  },
+  {
+   "id": "ttm_revenue",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.totalRevenue",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "revenue_growth",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.revenueGrowth",
+   "percent": true,
+   "decimals": 1,
+   "suffix": "%"
+  },
+  {
+   "id": "earnings_growth",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.earningsGrowth",
+   "percent": true,
+   "decimals": 1,
+   "suffix": "%"
+  },
+  {
+   "id": "gross_margin",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.grossMargins",
+   "percent": true,
+   "decimals": 1,
+   "suffix": "%"
+  },
+  {
+   "id": "op_margin",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.operatingMargins",
+   "percent": true,
+   "decimals": 1,
+   "suffix": "%"
+  },
+  {
+   "id": "roe",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.returnOnEquity",
+   "percent": true,
+   "decimals": 0,
+   "suffix": "%",
+   "tolerance": 0.01
+  },
+  {
+   "id": "daily_move",
+   "kind": "data_match",
+   "file": "data/nvda_quote.json",
+   "path": "quote.regularMarketChangePercent",
+   "decimals": 2,
+   "suffix": "%",
+   "tolerance": 0.05
+  },
+  {
+   "id": "fy23_revenue",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.incomeStatementHistory.3.totalRevenue",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "fy24_revenue",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.incomeStatementHistory.2.totalRevenue",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "fy25_revenue",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.incomeStatementHistory.1.totalRevenue",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "fy26_revenue",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.incomeStatementHistory.0.totalRevenue",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "fy23_netincome",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.incomeStatementHistory.3.netIncome",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "fy24_netincome",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.incomeStatementHistory.2.netIncome",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "fy25_netincome",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.incomeStatementHistory.1.netIncome",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "fy26_netincome",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.incomeStatementHistory.0.netIncome",
+   "scale": 1000000000.0,
+   "decimals": 2
+  },
+  {
+   "id": "consensus_mean",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.targetMeanPrice",
+   "decimals": 2
+  },
+  {
+   "id": "consensus_high",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.targetHighPrice",
+   "decimals": 0
+  },
+  {
+   "id": "consensus_low",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.targetLowPrice",
+   "decimals": 0
+  },
+  {
+   "id": "analyst_count",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.numberOfAnalystOpinions",
+   "decimals": 0
+  },
+  {
+   "id": "rec_mean",
+   "kind": "data_match",
+   "file": "data/nvda_financials.json",
+   "path": "financials.modules.financialData.recommendationMean",
+   "decimals": 2
+  },
+  {
+   "id": "peer_median_fwdpe",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "paths": [
+    "AMD.forwardPE",
+    "AVGO.forwardPE",
+    "TSM.forwardPE",
+    "INTC.forwardPE",
+    "MSFT.forwardPE"
+   ],
+   "agg": "median",
+   "decimals": 1,
+   "suffix": "x",
+   "path": null
+  },
+  {
+   "id": "peer_amd_fwdpe",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "AMD.forwardPE",
+   "decimals": 1,
+   "suffix": "x"
+  },
+  {
+   "id": "peer_avgo_fwdpe",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "AVGO.forwardPE",
+   "decimals": 1,
+   "suffix": "x"
+  },
+  {
+   "id": "peer_tsm_fwdpe",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "TSM.forwardPE",
+   "decimals": 1,
+   "suffix": "x"
+  },
+  {
+   "id": "peer_intc_fwdpe",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "INTC.forwardPE",
+   "decimals": 1,
+   "suffix": "x"
+  },
+  {
+   "id": "peer_msft_fwdpe",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "MSFT.forwardPE",
+   "decimals": 1,
+   "suffix": "x"
+  },
+  {
+   "id": "peer_amd_price",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "AMD.price",
+   "decimals": 2
+  },
+  {
+   "id": "peer_avgo_price",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "AVGO.price",
+   "decimals": 2
+  },
+  {
+   "id": "peer_tsm_price",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "TSM.price",
+   "decimals": 2
+  },
+  {
+   "id": "peer_intc_price",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "INTC.price",
+   "decimals": 2
+  },
+  {
+   "id": "peer_msft_price",
+   "kind": "data_match",
+   "file": "data/peers.json",
+   "path": "MSFT.price",
+   "decimals": 2
+  },
+  {
+   "id": "weighted_target_ev",
+   "kind": "raw",
+   "value": 346.94,
+   "display": "347",
+   "tolerance": 0.002,
+   "label": "probability-weighted target $347",
+   "path": null
+  },
+  {
+   "id": "implied_bull_pe",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.financialData.targetHighPrice"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.defaultKeyStatistics.forwardEps"
+   ],
+   "op": "ratio",
+   "unit": "ratio",
+   "tol": 0.02,
+   "expected": 33.2,
+   "regex": "and (\\d+(?:\\.\\d+)?)x",
+   "label": "bull implied 33.2x",
+   "path": null
+  },
+  {
+   "id": "implied_base_pe",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.financialData.targetMeanPrice"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.defaultKeyStatistics.forwardEps"
+   ],
+   "op": "ratio",
+   "unit": "ratio",
+   "tol": 0.02,
+   "expected": 21.1,
+   "regex": ", (\\d+(?:\\.\\d+)?)x",
+   "label": "base implied 21.1x",
+   "path": null
+  },
+  {
+   "id": "implied_bear_pe",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.financialData.targetLowPrice"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.defaultKeyStatistics.forwardEps"
+   ],
+   "op": "ratio",
+   "unit": "ratio",
+   "tol": 0.02,
+   "expected": 11.6,
+   "regex": "mapping to (\\d+(?:\\.\\d+)?)x",
+   "label": "bear implied 11.6x",
+   "path": null
+  },
+  {
+   "id": "target_implied_pe",
+   "kind": "derived_match",
+   "num": [
+    "@frontmatter",
+    "target_price"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.defaultKeyStatistics.forwardEps"
+   ],
+   "op": "ratio",
+   "unit": "ratio",
+   "tol": 0.02,
+   "expected": 22.4,
+   "regex": "implies (\\d+(?:\\.\\d+)?)x",
+   "label": "$347 implies 22.4x",
+   "path": null
+  },
+  {
+   "id": "upside_recommendation",
+   "kind": "derived_match",
+   "num": [
+    "@frontmatter",
+    "target_price"
+   ],
+   "den": [
+    "@frontmatter",
+    "current_price"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "regex": "implies [+\\-]?(\\d+(?:\\.\\d+)?)\\s*%\\s*upside",
+   "label": "Recommendation upside — computed 54.8%, text says +59%",
+   "path": null
+  },
+  {
+   "id": "upside_above_consensus",
+   "kind": "derived_match",
+   "num": [
+    "@frontmatter",
+    "target_price"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.financialData.targetMeanPrice"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 5.91,
+   "regex": "(\\d+)% above the 57-analyst",
+   "label": "target vs consensus mean (6%)",
+   "path": null
+  },
+  {
+   "id": "upside_bear_margin",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.financialData.targetLowPrice"
+   ],
+   "den": [
+    "@frontmatter",
+    "current_price"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": -19.72,
+   "regex": "\\$180,\\s*-\\s*\\d+%",
+   "label": "bear node (180 vs 224.22)",
+   "path": null
+  },
+  {
+   "id": "upside_bull_headroom",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.financialData.targetHighPrice"
+   ],
+   "den": [
+    "@frontmatter",
+    "current_price"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 129.68,
+   "regex": "\\$515\\s*\\([+\\-]?(\\d+(?:\\.\\d+)?)%",
+   "label": "bull node (515 vs 224.22)",
+   "path": null
+  },
+  {
+   "id": "range_low",
+   "kind": "derived_match",
+   "num": [
+    "@literal",
+    300
+   ],
+   "den": [
+    "@frontmatter",
+    "current_price"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 33.8,
+   "regex": "[+\\-]?(\\d+(?:\\.\\d+)?)%\\s+to",
+   "label": "$300 range low (+34%)",
+   "path": null
+  },
+  {
+   "id": "range_high",
+   "kind": "derived_match",
+   "num": [
+    "@literal",
+    370
+   ],
+   "den": [
+    "@frontmatter",
+    "current_price"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 65.02,
+   "regex": "to\\s+[+\\-]?(\\d+(?:\\.\\d+)?)%",
+   "label": "$370 range high (+65%)",
+   "path": null
+  },
+  {
+   "id": "discount_to_peer_median",
+   "kind": "derived_match",
+   "num_expr": {
+    "op": "one_minus_ratio",
+    "num": [
+     "data/nvda_quote.json",
+     "quote.forwardPE"
+    ],
+    "den": [
+     "data/peers.json",
+     "MSFT.forwardPE"
+    ]
+   },
+   "den": [
+    "@literal",
+    1
+   ],
+   "op": "ratio",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 30.77,
+   "regex": "(\\d+(?:\\.\\d+)?)% discount",
+   "label": "~31% discount to 20.9x median (use real median via peer_median_fwdpe)",
+   "path": null
+  },
+  {
+   "id": "premium_vs_amd",
+   "kind": "derived_match",
+   "num_expr": {
+    "op": "ratio",
+    "num": [
+     "@frontmatter",
+     "target_price"
+    ],
+    "den": [
+     "data/nvda_financials.json",
+     "financials.modules.defaultKeyStatistics.forwardEps"
+    ]
+   },
+   "den": [
+    "data/peers.json",
+    "AMD.forwardPE"
+   ],
+   "op": "one_minus_ratio",
+   "unit": "percent",
+   "tol_pp": 1.5,
+   "expected": 34,
+   "regex": "(\\d+)% below AMD's",
+   "label": "22.4x vs AMD 33.7x — computed 33.7%",
+   "path": null
+  },
+  {
+   "id": "ttm_above_fy26",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.financialData.totalRevenue"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.0.totalRevenue"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 40.31,
+   "regex": "(\\d+)% above FY2026",
+   "label": "TTM 40% above FY2026",
+   "path": null
+  },
+  {
+   "id": "revenue_8x",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.0.totalRevenue"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.3.totalRevenue"
+   ],
+   "op": "ratio",
+   "unit": "ratio",
+   "tol": 0.05,
+   "expected": 8.0,
+   "regex": "~?(\\d+(?:\\.\\d+)?)x\\s+in three fiscal",
+   "label": "~8x revenue in three FYs",
+   "path": null
+  },
+  {
+   "id": "eps_compression_2x",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.defaultKeyStatistics.forwardEps"
+   ],
+   "den": [
+    "data/nvda_quote.json",
+    "quote.epsTrailingTwelveMonths"
+   ],
+   "op": "ratio",
+   "unit": "ratio",
+   "tol": 0.03,
+   "expected": 1.965,
+   "regex": "~?(\\d+(?:\\.\\d+)?)x\\s+compression",
+   "label": "~2x EPS compression",
+   "path": null
+  },
+  {
+   "id": "fy26_yoy",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.0.totalRevenue"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.1.totalRevenue"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 65.47,
+   "regex": "FY2026 \\| 215\\.94 \\|\\s*[+\\-]?(\\d+(?:\\.\\d+)?)%",
+   "label": "FY2026 revenue y/y",
+   "path": null
+  },
+  {
+   "id": "fy25_yoy",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.1.totalRevenue"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.2.totalRevenue"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 114.2,
+   "regex": "FY2025 \\| 130\\.50 \\|\\s*[+\\-]?(\\d+(?:\\.\\d+)?)%",
+   "label": "FY2025 revenue y/y",
+   "path": null
+  },
+  {
+   "id": "fy24_yoy",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.2.totalRevenue"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.3.totalRevenue"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 125.86,
+   "regex": "FY2024 \\| 60\\.92 \\|\\s*[+\\-]?(\\d+(?:\\.\\d+)?)%",
+   "label": "FY2024 revenue y/y",
+   "path": null
+  },
+  {
+   "id": "fy26_nyoy",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.0.netIncome"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.1.netIncome"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 64.75,
+   "regex": "120\\.07 \\|\\s*[+\\-]?(\\d+(?:\\.\\d+)?)%",
+   "label": "FY2026 net income y/y",
+   "path": null
+  },
+  {
+   "id": "fy25_nyoy",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.1.netIncome"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.2.netIncome"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 144.89,
+   "regex": "72\\.88 \\|\\s*[+\\-]?(\\d+(?:\\.\\d+)?)%",
+   "label": "FY2025 net income y/y",
+   "path": null
+  },
+  {
+   "id": "fy24_nyoy",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.2.netIncome"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.3.netIncome"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 581.32,
+   "regex": "29\\.76 \\|\\s*[+\\-]?(\\d+(?:\\.\\d+)?)%",
+   "label": "FY2024 net income y/y",
+   "path": null
+  },
+  {
+   "id": "fm_fy26_margin",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.0.netIncome"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.0.totalRevenue"
+   ],
+   "op": "ratio",
+   "unit": "percent",
+   "tol_pp": 0.6,
+   "expected": 55.6,
+   "regex": "\\| 55\\.6%",
+   "label": "FY2026 net margin 55.6%",
+   "path": null
+  },
+  {
+   "id": "fm_fy23_margin",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.3.netIncome"
+   ],
+   "den": [
+    "data/nvda_financials.json",
+    "financials.modules.incomeStatementHistory.3.totalRevenue"
+   ],
+   "op": "ratio",
+   "unit": "percent",
+   "tol_pp": 0.6,
+   "expected": 16.19,
+   "regex": "\\| 16\\.2%",
+   "label": "FY2023 net margin 16.2%",
+   "path": null
+  },
+  {
+   "id": "fwd_eps_vs_trailing",
+   "kind": "derived_match",
+   "num": [
+    "data/nvda_financials.json",
+    "financials.modules.defaultKeyStatistics.forwardEps"
+   ],
+   "den": [
+    "data/nvda_quote.json",
+    "quote.epsTrailingTwelveMonths"
+   ],
+   "op": "ratio_minus_1",
+   "unit": "percent",
+   "tol_pp": 1.0,
+   "expected": 96.44,
+   "regex": "(\\d+)% above trailing \\$7\\.90",
+   "label": "fwd EPS 96% above trailing",
+   "path": null
+  }
+ ],
+ "tables": {
+  "required_rows": [
+   {
+    "table_contains": "Fiscal year",
+    "label_col": 0,
+    "rows": [
+     "FY2023",
+     "FY2024",
+     "FY2025",
+     "FY2026"
+    ]
+   },
+   {
+    "table_contains": "Company",
+    "label_col": 0,
+    "rows": [
+     "NVIDIA",
+     "AMD",
+     "Broadcom",
+     "TSMC",
+     "Intel",
+     "Microsoft",
+     "Median (ex-NVDA)"
+    ]
+   },
+   {
+    "table_contains": "Scenario",
+    "label_col": 0,
+    "rows": [
+     "Bull",
+     "Base",
+     "Bear"
+    ]
+   },
+   {
+    "table_contains": "Date",
+    "label_col": 0,
+    "rows": [
+     "Next quarterly report (TBD)"
+    ]
+   }
+  ],
+  "required_cells": [
+   {
+    "table_contains": "Fiscal year",
+    "row": "FY2026",
+    "label_col": 0,
+    "cells": [
+     {
+      "col": 1,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.0.totalRevenue"
+       ],
+       "den": [
+        "@literal",
+        1000000000.0
+       ],
+       "decimals": 2
+      }
+     },
+     {
+      "col": 2,
+      "computed": {
+       "op": "ratio_minus_1",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.0.totalRevenue"
+       ],
+       "den": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.1.totalRevenue"
+       ],
+       "percent": true,
+       "decimals": 1,
+       "tol_pp": 1.0
+      }
+     },
+     {
+      "col": 3,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.0.netIncome"
+       ],
+       "den": [
+        "@literal",
+        1000000000.0
+       ],
+       "decimals": 2
+      }
+     },
+     {
+      "col": 4,
+      "computed": {
+       "op": "ratio_minus_1",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.0.netIncome"
+       ],
+       "den": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.1.netIncome"
+       ],
+       "percent": true,
+       "decimals": 1,
+       "tol_pp": 1.0
+      }
+     },
+     {
+      "col": 5,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.0.netIncome"
+       ],
+       "den": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.0.totalRevenue"
+       ],
+       "percent": true,
+       "decimals": 1,
+       "tol_pp": 1.0
+      }
+     }
+    ]
+   },
+   {
+    "table_contains": "Fiscal year",
+    "row": "FY2024",
+    "label_col": 0,
+    "cells": [
+     {
+      "col": 1,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.2.totalRevenue"
+       ],
+       "den": [
+        "@literal",
+        1000000000.0
+       ],
+       "decimals": 2
+      }
+     },
+     {
+      "col": 2,
+      "computed": {
+       "op": "ratio_minus_1",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.2.totalRevenue"
+       ],
+       "den": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.3.totalRevenue"
+       ],
+       "percent": true,
+       "decimals": 1,
+       "tol_pp": 1.0
+      }
+     }
+    ]
+   },
+   {
+    "table_contains": "Fiscal year",
+    "row": "FY2023",
+    "label_col": 0,
+    "cells": [
+     {
+      "col": 1,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.3.totalRevenue"
+       ],
+       "den": [
+        "@literal",
+        1000000000.0
+       ],
+       "decimals": 2
+      }
+     },
+     {
+      "col": 3,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.incomeStatementHistory.3.netIncome"
+       ],
+       "den": [
+        "@literal",
+        1000000000.0
+       ],
+       "decimals": 2
+      }
+     }
+    ]
+   },
+   {
+    "table_contains": "Scenario",
+    "row": "Bull",
+    "label_col": 0,
+    "cells": [
+     {
+      "col": 1,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.financialData.targetHighPrice"
+       ],
+       "den": [
+        "@literal",
+        1
+       ],
+       "decimals": 2
+      }
+     },
+     {
+      "col": 2,
+      "exact": "30%"
+     },
+     {
+      "col": 3,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.financialData.targetHighPrice"
+       ],
+       "den": [
+        "data/nvda_financials.json",
+        "financials.modules.defaultKeyStatistics.forwardEps"
+       ],
+       "decimals": 1
+      }
+     }
+    ]
+   },
+   {
+    "table_contains": "Scenario",
+    "row": "Base",
+    "label_col": 0,
+    "cells": [
+     {
+      "col": 1,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.financialData.targetMeanPrice"
+       ],
+       "den": [
+        "@literal",
+        1
+       ],
+       "decimals": 2
+      }
+     },
+     {
+      "col": 2,
+      "exact": "45%"
+     },
+     {
+      "col": 3,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.financialData.targetMeanPrice"
+       ],
+       "den": [
+        "data/nvda_financials.json",
+        "financials.modules.defaultKeyStatistics.forwardEps"
+       ],
+       "decimals": 1
+      }
+     }
+    ]
+   },
+   {
+    "table_contains": "Scenario",
+    "row": "Bear",
+    "label_col": 0,
+    "cells": [
+     {
+      "col": 1,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.financialData.targetLowPrice"
+       ],
+       "den": [
+        "@literal",
+        1
+       ],
+       "decimals": 2
+      }
+     },
+     {
+      "col": 2,
+      "exact": "25%"
+     },
+     {
+      "col": 3,
+      "computed": {
+       "op": "ratio",
+       "num": [
+        "data/nvda_financials.json",
+        "financials.modules.financialData.targetLowPrice"
+       ],
+       "den": [
+        "data/nvda_financials.json",
+        "financials.modules.defaultKeyStatistics.forwardEps"
+       ],
+       "decimals": 1
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

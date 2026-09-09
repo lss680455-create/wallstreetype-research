@@ -57,7 +57,7 @@ The pipeline is a **workflow**, not a program. You drive it in four moves:
                                           ├── [child] Industry Analyst ─┼── parallel (or sequential) ── S5 main-agent adjudication
                                           └── [child] Valuation Analyst┘        │
                                    S4 [child] Red Team ────────────────────────┘
-                                   S6 [child] Chart Specialist ─ S7 [child] Layout Specialist ─ S8 main-agent final QA & delivery
+                                   S6 [child] Chart Specialist ─ S7 [child] Layout Specialist ─ S8 main-agent final QA ─ S9 main-agent Proofing & QC (J1 machine gate + J2 visual gate) ─ deliver
 ```
 
 **Key principle:** the pipeline's *correctness* depends on the workflow (files + gates), **not** on any specific agent
@@ -98,6 +98,10 @@ The pipeline is **run-root relative**. The main agent creates the run at runtime
 ├── data/                             # SINGLE WRITER: Data Engineer
 │   ├── manifest.json                 # inventory of fetched data (id, path, fetched_at, freshness_tier)
 │   ├── sources.json                  # source registry (S001, S002, ...) — single source of truth for citations
+│   ├── numbers.json                  # 数字引用表 (number reference table) — every core number the report will
+│   │                                 #   carry: label → data file+path → display format → tolerance. Consumed by
+│   │                                 #   scripts/check/build_check.py (J1). Numbers NOT registered here are a
+│   │                                 #   violation by rule (数字未登记引用表=违规范), enforced at S9/G7.
 │   ├── fundamentals.json             # financial statements / key metrics (per market)
 │   ├── price_history.csv             # price/volume series (for charts)
 │   ├── estimates.json                # consensus estimates, guidance, company targets (optional)
@@ -117,9 +121,13 @@ The pipeline is **run-root relative**. The main agent creates the run at runtime
 │   └── fig_*.png                     # figures (also .svg where supported)
 ├── draft/
 │   └── report_draft.md               # SINGLE WRITER: Layout Specialist
-└── final/                            # SINGLE WRITER: main agent
-    ├── report.md
-    └── report.docx / report.pdf      # via templates/md_to_docx.py, if present
+├── final/                            # SINGLE WRITER: main agent
+│   ├── report.md
+│   └── report.docx / report.pdf      # via templates/md_to_docx.py, if present
+└── proof/                            # SINGLE WRITER: main agent (S9)
+    ├── build_check.txt               # J1 machine gate output (scripts/check/build_check.py, verbatim)
+    ├── visual_proofing.md            # J2 per-page visual checklist (页号 × 检查项 × PASS/FAIL)
+    └── pages/                        # page_*.png renders of report.pdf for vision proofing
 ```
 
 **Handoff contract for the modules (charts / layout / data):**
@@ -172,7 +180,7 @@ appended to only by the Data Engineer; new sources discovered by other roles are
 
 ## 6. Role Roster & Lens Boundaries / 角色与透镜边界
 
-**7 roles. Lenses are disjoint — each role owns exactly one layer and must NOT cross into another's.**
+**8 roles (lenses are disjoint; role 8 is optional at S9). Lenses are disjoint — each role owns exactly one layer and must NOT cross into another's.**
 
 | # | Role | Lens (one line) | Owns | Explicitly NOT allowed |
 |---|---|---|---|---|
@@ -183,8 +191,9 @@ appended to only by the Data Engineer; new sources discovered by other roles are
 | 5 | **Main Agent / Editor-in-Chief** 主编（主代理，不委派） | **Synthesis & adjudication**: what the report will *conclude* | briefs, per-claim verdicts, minority report, report skeleton, quality gates, final delivery | fabricating evidence; delegating the adjudication itself |
 | 6 | **Chart Specialist** 图表师 | **Visual evidence**: figures that make claims legible | figure selection, data→chart mapping, annotations | new analysis, changing numbers, writing claims |
 | 7 | **Layout Specialist** 排版师 | **Structure & readability**: a report a human can actually read | assembly, section order, typography, citations formatting, format conversion | content edits beyond mechanical fixes, new opinions |
+| 8 | **Proofreader** 校对员 (S9, optional assistant) | **Compliance & polish**: does the report survive the quality gate | G7 checklist execution: J1 machine checks + J2 vision proofing on per-page renders, number-reference-table cross-check | new analysis content, rewriting prose, changing numbers — the proofreader VERIFIES, never edits content |
 
-Roles 1–4 and 6–7 are **leaf child agents**. The main agent (Editor, role 5) is the only orchestrator and adjudicator.
+Roles 1–4 and 6–7 are **leaf child agents** (8 is an optional S9 assistant, still a leaf). The main agent (Editor, role 5) is the only orchestrator and adjudicator.
 
 ---
 
@@ -198,10 +207,11 @@ Roles 1–4 and 6–7 are **leaf child agents**. The main agent (Editor, role 5)
  S5  Editorial Adjudication  ─ main agent                → decisions/decision.json
  S6  Charting                ─ 1 leaf child              → charts/manifest.json, fig_*.png
  S7  Layout & Assembly       ─ 1 leaf child              → draft/report_draft.md
- S8  Final Review & Delivery ─ main agent                → final/report.*, run summary
+ S8  Final Review            ─ main agent                → final/report.*, run summary
+ S9  Proofing & QC           ─ main agent (主编) + proof→ proof/* (J1 report + J2 visual checklist) — QUALITY GATE G7
 ```
 
-**8 stages, up to 4 dispatch waves** (all other work is done by the main agent):
+**9 stages, up to 4 dispatch waves** (all other work is done by the main agent):
 
 | Wave | Stage(s) | Dispatch | Parallelism |
 |---|---|---|---|
@@ -209,6 +219,8 @@ Roles 1–4 and 6–7 are **leaf child agents**. The main agent (Editor, role 5)
 | W2 | S4 | start 1 child (skip in `quick` tier) | 1 child |
 | W3 | S6 | start 1 child (skip in `quick` tier) | 1 child |
 | W4 | S7 | start 1 child | 1 child |
+
+**S9 is run by the main agent (主编) without a child** — it is the stage that turns soft "quality advice" into a hard machine-checked gate. Standard/quick tiers run S9 with `scripts/check/build_check.py` (J1) + a visual pass (J2); `quick` tier may reduce J2 to a spot-check of cover + first content page.
 
 Max concurrent children needed: **3**. If a runtime caps concurrency below 3, run the research roles sequentially —
 the workflow is unaffected.
@@ -323,6 +335,27 @@ the workflow is unaffected.
   - [ ] `final/report.md` exists and is non-empty; delivery message summarizes: thesis, key numbers, risks, open questions, and where artifacts live
 - **Fail →** main agent fixes mechanical issues directly or dispatches one narrow layout fix; content-level failures go back to the affected stage (bounded by depth-tier rounds).
 
+### S9 — Proofing & QC 校对质检（双通道质量门 J1 + J2）
+
+- **Who:** main agent (主编) — never delegated to a leaf child. *Proofreader 校对员 is an optional assistant role (brief in `agent_prompts.md`); the main agent drives the gate either way.*
+- **Input:** `final/report.md` (+ `report.docx`/`report.pdf` if converted), `data/*`, `data/numbers.json` (数字引用表), `charts/manifest.json` + figures.
+- **Output:** `proof/` directory:
+  - `proof/build_check.txt` — full J1 machine-gate report (run `scripts/check/build_check.py`, saved verbatim).
+  - `proof/visual_proofing.md` — J2 per-page visual checklist (page × check item × PASS/FAIL), see below.
+  - `proof/pages/page_*.png` — PDF rendered page by page (pymupdf: `python -c "import pymupdf; ... get_pixmap(dpi=144) ..."`; any renderer a vision-capable model can read works).
+- **Steps:**
+  1. **J1 — machine gate.** Run `python scripts/check/build_check.py final/report.md` (needs `numbers.json` 数字引用表 next to the report). Captures: placeholder residue, Exhibit continuity + file existence, every registered number vs the data JSONs, frontmatter consistency (target/current/upside), table structure + key rows/cells. **Any FAIL → back to the owning stage (S7 for layout/numbers-scripting, S3 for data mismatch), then rerun.**
+  2. **J2 — visual gate (vision model proofing).** Render the PDF/ docx to per-page PNGs. **A model with VISION input must inspect every page** against the checklist below — judgment on layout from text alone is FORBIDDEN (agent-agnostic: any vision-capable model, multimodal CLI, or a human reviewer passes; a text-only model must pass the PNGs to one). Record a per-page table: 页号 × 检查项 × PASS/FAIL. **Any page FAIL → back to S7 (Layout Specialist) to re-typeset, then J1+J2 rerun.**
+  3. **Proofreading pass (reading, still no content edits):** numbers vs 数字引用表 double-read, citations resolve, language consistency, no duplicated sections, no orphaned captions/headings.
+- **Quality gate G7 — 自动校验单 (all items must PASS):**
+  - [ ] J1: `build_check.py` exit code 0 — **全 PASS** (placeholder-free, Exhibit 1..K continuous with existing files, numbers reconcile with data JSONs within tolerance, frontmatter self-consistent, tables structurally complete)
+  - [ ] 数字引用表 (data/numbers.json 或报告旁的 numbers.json) 完整: every core number in the report is registered — **数字未登记引用表 = 违规范 (an unregistered core number is a violation by rule)**
+  - [ ] J2 visual: every page checked by a vision-capable model; cover rating box (评级框) / analyst block (分析师块) / key-data price block rendered; no text overlap, no element overflow beyond margins, no clipping, no misalignment, no image exceeding page width, no detached captions, tables split only with a repeated header row, header/footer present with "Page X of Y"
+  - [ ] 无 {{PLACEHOLDER}} 残留 (report md + docx/PDF text)
+  - [ ] Chinese glyphs render (eastAsia font registered; body/headings show a CJK-capable face when language=zh)
+  - [ ] Any FAIL → documented reason + stage the fix returns to; gate re-opened until all PASS
+- **Fail →** one bounded fix round (diminishing: J1 fixes are mechanical; J2 fixes return to S7 with the specific page + item). Never publish on a red gate; publish only after **G7 all green**.
+
 ---
 
 ## 9. Orchestration Mechanics / 编排机制
@@ -353,7 +386,9 @@ W2  start Red Team (skip if depth=quick) → wait → G2 check
 S5  main agent adjudicates inline (NO child)
 W3  start Chart Specialist (skip if depth=quick) → wait → G4 check
 W4  start Layout Specialist → wait → G5 check
-S8  main agent final QA → publish → deliver
+S8  main agent final QA (G6) → publish final/
+S9  main agent Proofing & QC: J1 build_check → J2 page renders + vision proofing → G7
+    → if G7 red: dispatch narrow fix (back to S7 typically) → rerun J1+J2 → publish
 ```
 
 ### 9.2 Rules that keep the pipeline honest
@@ -460,7 +495,7 @@ All JSON artifacts validate against these shapes (JSON Schema files ship with th
 
 | | `quick` | `standard` | `deep` |
 |---|---|---|---|
-| Stages | S1, S2, S3, S5, S7, S8 | S1–S8 | S1–S8 |
+| Stages | S1, S2, S3, S5, S7, S8, S9 (J1; J2 = cover + first page spot-check) | S1–S9 | S1–S9 |
 | Red team | main-agent inline red-flag scan | 1 child round | 2 rounds (2nd round forces **new factors** — anti-groupthink) |
 | Charts | none | ≥ 3 core figures | full figure set |
 | Revise rounds | 0 | 1 per gate | 2 per gate |
@@ -483,8 +518,13 @@ All JSON artifacts validate against these shapes (JSON Schema files ship with th
    promote accepted counter-evidence sources → record `open_questions`. Run G3.
 6. **S6.** If depth ≠ quick: write the figure plan into the chart brief, dispatch Chart Specialist. Run G4.
 7. **S7.** Dispatch Layout Specialist with skeleton + chart manifest. Run G5.
-8. **S8.** Final checklist (G6) → publish `final/` → deliver summary (thesis, key numbers, risks, open questions,
-   artifact paths). Optionally append durable facts to `run_knowledge.md`.
+8. **S8.** Final checklist (G6) → publish `final/` → run S9 → deliver summary (thesis, key numbers, risks,
+   open questions, artifact paths). Optionally append durable facts to `run_knowledge.md`.
+9. **S9.** Proofing & QC: (1) J1 — run `scripts/check/build_check.py final/report.md`; save output to
+   `proof/build_check.txt`. (2) J2 — render `proof/pages/page_*.png` and have a **vision-capable model**
+   inspect every page on the G7 visual checklist, recording `proof/visual_proofing.md`. (3) Verify
+   `numbers.json` covers every core number in the report. **Gate G7** (all green) before delivery; any red
+   → narrow fix (usually back to S7) → rerun J1+J2.
 
 **Main-agent discipline (never violated):**
 - 主代理绝不凭整体印象裁决——先读齐所有 artifacts，逐 claim 裁决。
@@ -504,6 +544,7 @@ All JSON artifacts validate against these shapes (JSON Schema files ship with th
   - `scripts/data/data_fetcher.py` — unified data acquisition (quotes/history/financials for US & CN; `--json` for structured output).
   - `scripts/charts/report_charts.py` — render research-style figures (kline / PE band / financials / scenario / peer comparison → PNG).
   - `templates/md_to_docx.py` — assemble the Markdown master → Word `.docx` (and PDF via `--pdf`, requires MS Word + docx2pdf).
+  - `scripts/check/build_check.py` — **the S9 machine gate (J1)**: placeholders, Exhibit continuity/files, number-reference reconciliation vs data JSONs, frontmatter consistency (target/current/upside), table structure + key rows/cells. Exit code non-zero on any FAIL. (See `scripts/check/` for the number-reference-table format.)
   - Any agent with code execution (or any human with a shell) can run them; the pipeline works even without them
     (agents or humans fetch and save files directly, and mark sources).
 - **No machine-specific paths anywhere:** briefs contain only `RUN_ROOT`-relative conventions

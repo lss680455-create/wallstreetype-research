@@ -198,6 +198,11 @@ def _set_font(run, name="Calibri", size=10, bold=False, italic=False,
     if rFonts is None:
         rFonts = OxmlElement("w:rFonts")
         rPr.append(rFonts)
+    # drop theme attributes: asciiTheme would override w:ascii in Word
+    for t in ("w:asciiTheme", "w:hAnsiTheme", "w:eastAsiaTheme", "w:cstheme"):
+        attr = qn(t)
+        if rFonts.get(attr) is not None:
+            del rFonts.attrib[attr]
     rFonts.set(qn("w:ascii"), name)
     rFonts.set(qn("w:hAnsi"), name)
     rFonts.set(qn("w:eastAsia"), EASTASIA)
@@ -456,11 +461,26 @@ class MDWalker(HTMLParser):
     def handle_data(self, data):
         if not data:
             return
-        if self.in_table and self.cur_cell is not None:
-            self.cur_cell.append((data, self._fmt()))
-        elif self.in_list and "li" in self.stack:
+        if self.in_table:
+            # Only cell content counts; the whitespace/newlines BETWEEN table
+            # tags (<table>, <thead>, <tr>, ...) must never leak into the
+            # inline accumulator — otherwise every table produces a phantom
+            # paragraph of 20+ line breaks that pushes the following content
+            # onto the next page and can leave blank pages behind.
+            if self.cur_cell is not None:
+                self.cur_cell.append((data, self._fmt()))
+            return
+        if self.in_list and "li" in self.stack:
             self.inlines.append((data, self._fmt()))
-        elif self.stack:
+            return
+        # Only append text that actually belongs to a content context.
+        # Whitespace between tags (e.g. "\n" between </li> and <li>, or after
+        # a </table>) is structural, not content, and must be discarded.
+        if "p" in self.stack or "li" in self.stack:
+            self.inlines.append((data, self._fmt()))
+            return
+        if ("pre" in self.stack or "blockquote" in self.stack
+                or any(h in self.stack for h in ("h1", "h2", "h3", "h4", "h5"))):
             self.inlines.append((data, self._fmt()))
 
 
@@ -490,11 +510,7 @@ class DocxRenderer:
         normal = st["Normal"]
         normal.font.name = "Calibri"
         normal.font.size = Pt(10)
-        rpr = normal.element.get_or_add_rPr()
-        rf = OxmlElement("w:rFonts")
-        rf.set(qn("w:ascii"), "Calibri"); rf.set(qn("w:hAnsi"), "Calibri")
-        rf.set(qn("w:eastAsia"), EASTASIA)
-        rpr.append(rf)
+        self._style_rfonts(normal.element.get_or_add_rPr(), "Calibri")
         pf = normal.paragraph_format
         pf.space_after = Pt(6)
         pf.line_spacing = 1.08
@@ -510,11 +526,28 @@ class DocxRenderer:
             h.paragraph_format.space_before = Pt(before)
             h.paragraph_format.space_after = Pt(after)
             h.paragraph_format.keep_with_next = True
-            rpr = h.element.get_or_add_rPr()
+            self._style_rfonts(h.element.get_or_add_rPr(), "Calibri")
+
+    @staticmethod
+    def _style_rfonts(rpr, name):
+        """Ensure EXACTLY ONE w:rFonts element with ascii/hAnsi/eastAsia set.
+
+        python-docx's font.name setter creates <w:rFonts w:ascii w:hAnsi> but
+        appends nothing for eastAsia; appending a second rFonts leaves the
+        East-Asian face unregistered (Word picks whichever duplicate it reads
+        first). Instead: reuse the existing element and set all three faces.
+        """
+        rf = rpr.find(qn("w:rFonts"))
+        if rf is None:
             rf = OxmlElement("w:rFonts")
-            rf.set(qn("w:ascii"), "Calibri"); rf.set(qn("w:hAnsi"), "Calibri")
-            rf.set(qn("w:eastAsia"), EASTASIA)
             rpr.append(rf)
+        for t in ("w:asciiTheme", "w:hAnsiTheme", "w:eastAsiaTheme", "w:cstheme"):
+            attr = qn(t)
+            if rf.get(attr) is not None:
+                del rf.attrib[attr]
+        rf.set(qn("w:ascii"), name)
+        rf.set(qn("w:hAnsi"), name)
+        rf.set(qn("w:eastAsia"), EASTASIA)
 
     # -- cover --------------------------------------------------------------
     def render_cover(self):
@@ -853,6 +886,11 @@ class DocxRenderer:
         table.autofit = False
         col_w = Inches(6.6 / ncols)
         numeric_cols = [self._is_numeric_col(rows, j) for j in range(ncols)]
+        # repeat the header row on every page a table spans (pagination sanity)
+        trPr = table.rows[0]._tr.get_or_add_trPr()
+        th = OxmlElement("w:tblHeader")
+        th.set(qn("w:val"), "true")
+        trPr.append(th)
         for i, (is_head, cells, cell_aligns) in enumerate(rows):
             for j in range(ncols):
                 cell = table.cell(i, j)
@@ -884,7 +922,6 @@ class DocxRenderer:
             el.set(qn("w:color"), "C9CFD8")
             borders.append(el)
         tblPr.append(borders)
-        self.doc.add_paragraph().paragraph_format.space_after = Pt(0)
 
     def _render_img(self, src, alt):
         img_path = self.md_dir / src if src else None
