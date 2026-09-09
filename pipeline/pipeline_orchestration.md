@@ -342,7 +342,7 @@ the workflow is unaffected.
   - `proof/visual_proofing.md` — per-page visual checklist (page × check item × PASS/FAIL), see below.
   - `proof/pages/page_*.png` — PDF rendered page by page (pymupdf: `python -c "import pymupdf; ... get_pixmap(dpi=144) ..."`; any renderer a vision-capable model can read works).
 - **Steps:**
-  1. **Render.** Render `final/report.pdf` (or the docx) page by page to `proof/pages/page_NN.png`.
+  1. **Render.** Render `final/report.pdf` (or the docx) page by page to `proof/pages/page_NN.png`. **Re-render after ANY change to the artifacts — a stale render passes a false gate** (an old PNG can look clean while the current PDF is broken).
   2. **Vision proofing — this IS the gate.** **A model with VISION input must inspect every page** against the checklist below — judgment on layout from text alone is FORBIDDEN (agent-agnostic: any vision-capable model, multimodal CLI, or a human reviewer passes; a text-only model must pass the PNGs to one). The vision reviewer holds `data/numbers.json` (数字引用表) as the cross-check reference and verifies every core number printed on a page against its registered value. Record a per-page table: 页号 × 检查项 × PASS/FAIL in `proof/visual_proofing.md`. **Any page FAIL → back to S7 (Layout Specialist) to re-typeset, then re-render and re-proof.**
   3. **Proofreading pass (reading, still no content edits):** citations resolve, language consistency, no duplicated sections, no orphaned captions/headings.
 - **Quality gate G7 — 视觉校对单 (all items must PASS):**
