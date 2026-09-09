@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build artifacts
+build/
+dist/
+
+# Research raw scratch (search dumps used to build the 100-report list)
+research/raw/
+
+# Sample conversion outputs (regenerate on demand)
+examples/layout_demo/output/
+examples/nvda_demo/*.docx
+examples/nvda_demo/*.pdf

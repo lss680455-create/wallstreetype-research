@@ -1,0 +1,30 @@
+{
+ "market": "us",
+ "symbol": "NVDA",
+ "data_type": "quote",
+ "quote": {
+  "shortName": "NVIDIA Corporation",
+  "longName": "NVIDIA Corporation",
+  "regularMarketPrice": 224.225,
+  "regularMarketChangePercent": -0.66673595,
+  "marketCap": 5414360973312,
+  "trailingPE": 28.382912,
+  "forwardPE": 14.448362,
+  "priceToBook": 23.644945,
+  "bookValue": 9.483,
+  "epsTrailingTwelveMonths": 7.9,
+  "dividendYield": 0.44,
+  "sharesOutstanding": 24147000000,
+  "fiftyTwoWeekHigh": 236.54,
+  "fiftyTwoWeekLow": 164.27,
+  "regularMarketDayHigh": 226.18,
+  "regularMarketDayLow": 223.51,
+  "regularMarketVolume": 51889753,
+  "marketState": "REGULAR",
+  "preMarketPrice": null,
+  "postMarketPrice": null,
+  "currency": "USD",
+  "exchange": "NMS",
+  "market": "us"
+ }
+}

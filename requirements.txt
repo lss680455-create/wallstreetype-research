@@ -1,0 +1,21 @@
+# Wall Street Research — full-chain equity research
+# Agent-agnostic: plain Python, no platform dependencies.
+
+# --- Data layer (scripts/data) ---
+requests>=2.31
+certifi>=2024.2
+pysocks>=1.7.1        # SOCKS5 proxy support for Yahoo from CN networks
+
+# --- Charts layer (scripts/charts) ---
+matplotlib>=3.8
+mplfinance>=0.12.10b0
+pandas>=2.0
+numpy>=1.26
+
+# --- Layout layer (templates) ---
+python-docx>=1.1.0
+markdown>=3.5
+docx2pdf>=0.1.8       # optional: --pdf output (requires MS Word on Windows)
+
+# --- Optional extras ---
+# finplot>=1.8.2      # interactive alternative for chart exploration (not required)

@@ -1,0 +1,42 @@
+{
+ "AMD": {
+  "price": 523.345,
+  "trailingPE": 132.82867,
+  "forwardPE": 33.735744,
+  "pb": 12.705322,
+  "mktCap": 854347612160,
+  "revGrowth": null
+ },
+ "AVGO": {
+  "price": 363.68,
+  "trailingPE": 46.328663,
+  "forwardPE": 18.758091,
+  "pb": 17.386814,
+  "mktCap": 1730236776448,
+  "revGrowth": null
+ },
+ "TSM": {
+  "price": 433.6,
+  "trailingPE": 32.071007,
+  "forwardPE": 19.77642,
+  "pb": 88.73272,
+  "mktCap": 2248855257088,
+  "revGrowth": null
+ },
+ "INTC": {
+  "price": 105.705,
+  "trailingPE": null,
+  "forwardPE": 51.749462,
+  "pb": 6.089349,
+  "mktCap": 558767734784,
+  "revGrowth": null
+ },
+ "MSFT": {
+  "price": 491.965,
+  "trailingPE": 27.438091,
+  "forwardPE": 20.869602,
+  "pb": 8.259296,
+  "mktCap": 3653108498432,
+  "revGrowth": null
+ }
+}
