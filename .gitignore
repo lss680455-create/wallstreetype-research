@@ -17,7 +17,5 @@ dist/
 # Research raw scratch (search dumps used to build the 100-report list)
 research/raw/
 
-# Sample conversion outputs (regenerate on demand)
-examples/layout_demo/output/
-examples/nvda_demo/*.docx
-examples/nvda_demo/*.pdf
+# Sample conversion outputs ARE committed so the repo shows finished artifacts
+# (regenerate any time with templates/md_to_docx.py; see README "Quick start")

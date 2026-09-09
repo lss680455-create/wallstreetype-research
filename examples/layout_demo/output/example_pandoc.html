@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.11" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2026-09-10" />
+  <title>Example Report</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Example Report</h1>
+<p class="date">September 10, 2026</p>
+</header>
+<h1 id="executive-summary">Executive Summary</h1>
+<p>We initiate coverage of <strong>Acme Industrial Holdings (ACME,
+NASDAQ)</strong> with an <strong>OVERWEIGHT</strong> rating and a
+<strong>USD 78.00 twelve-month target price</strong>, implying
+<strong>+22% upside/(downside)</strong> from the current price of USD
+64.00. Our rating is relative to the coverage universe over the stated
+horizon, consistent with the rating definitions in the Recommendation
+section.</p>
+<p><strong>What’s changed.</strong> Initiation of coverage: no prior
+rating or target price. We establish FY2026E revenue of $1,560M (+13%
+y/y) and EPS of $3.28, 4% above consensus, driven by automation backlog
+conversion.</p>
+<p><strong>Investment thesis.</strong> Our thesis rests on three
+pillars: (1) margin expansion from the automated manufacturing rollout
+completing Q3 2026, (2) backlog conversion acceleration fueled by
+infrastructure-spending tailwinds, and (3) an underappreciated
+aftermarket revenue inflection as the installed base matures.</p>
+<p><strong>Key risks.</strong> Steel input-cost volatility, customer
+concentration (top-3 accounts ≈ 38% of revenue), and a
+slower-than-expected manufacturing upcycle.</p>
+<p><strong>Financial highlights (illustrative):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>FY2024A</th>
+<th>FY2025A</th>
+<th>FY2026E</th>
+<th>FY2027E</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revenue (USD M)</td>
+<td>1,240</td>
+<td>1,380</td>
+<td>1,560</td>
+<td>1,720</td>
+</tr>
+<tr>
+<td>EBITDA margin (%)</td>
+<td>14.2</td>
+<td>15.8</td>
+<td>17.5</td>
+<td>18.3</td>
+</tr>
+<tr>
+<td>EPS (USD)</td>
+<td>1.92</td>
+<td>2.35</td>
+<td>3.28</td>
+<td>3.95</td>
+</tr>
+<tr>
+<td>FCF yield (%)</td>
+<td>5.1</td>
+<td>6.2</td>
+<td>8.4</td>
+<td>10.1</td>
+</tr>
+<tr>
+<td>Net debt/EBITDA (x)</td>
+<td>1.8</td>
+<td>1.4</td>
+<td>0.9</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<p>Source: Company data, WSR Research estimates.</p>
+<h1 id="company-overview">Company Overview</h1>
+<h2 id="business-model">Business Model</h2>
+<p>ACME designs and manufactures industrial automation systems for
+discrete and process manufacturing. Revenue splits roughly 62%
+equipment, 24% aftermarket parts &amp; services, and 14% software &amp;
+connectivity. The aftermarket mix is the strategic priority: it carries
+2–3x the gross margin of equipment and is the most defensible line as
+the installed base compounds.</p>
+<h2 id="industry-market-position">Industry &amp; Market Position</h2>
+<p>The global industrial automation market is ~$180B, growing
+high-single-digit annually. ACME ranks #4 by share with ~6.5%, behind
+three larger diversified peers but ahead of most pure-play rivals. Its
+differentiation is vertical-software depth — roughly 40% of new
+equipment orders ship with a software subscription attach, versus a
+low-teens industry average.</p>
+<h2 id="management">Management</h2>
+<p>The CEO (since 2019) has a 20-year operating history at ACME; the CFO
+joined in 2022 from a large-cap industrial. Management has guided to a
+15–17% long-term EBITDA margin framework and a 30–40% payout ratio. We
+view execution risk around the Q3 2026 manufacturing rollout as the key
+management watch-item.</p>
+<h1 id="financial-analysis">Financial Analysis</h1>
+<h2 id="revenue">Revenue</h2>
+<p>Equipment revenue is cyclical but backlog visibility is strong: the
+current backlog of $940M covers ~70% of FY2026E equipment revenue.
+Aftermarket revenue has compounded at 14% over FY2021–25A and should
+inflect further as the installed base grows.</p>
+<h2 id="margins-profitability">Margins &amp; Profitability</h2>
+<p>FY2025A EBITDA margin of 15.8% reflected commodity headwinds and
+rollout inefficiencies. We model 17.5% for FY2026E and 18.3% for FY2027E
+as the automation rollout drives labor-cost savings and mix shifts
+toward aftermarket.</p>
+<h2 id="balance-sheet-cash-flow">Balance Sheet &amp; Cash Flow</h2>
+<p>Net debt/EBITDA of 1.4x at FY2025A falls to ~0.5x by FY2027E on our
+estimates, giving the balance sheet optionality for buybacks or M&amp;A.
+FCF conversion (FCF/net income) has averaged ~85%; we model 90%+ by
+FY2027E.</p>
+<h3 id="segment-detail">Segment Detail</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Segment</th>
+<th>FY2025A Rev (USD M)</th>
+<th>FY2026E Rev (USD M)</th>
+<th>FY2026E GM (%)</th>
+<th>y/y (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Equipment</td>
+<td>856</td>
+<td>967</td>
+<td>31</td>
+<td>+13</td>
+</tr>
+<tr>
+<td>Aftermarket</td>
+<td>331</td>
+<td>405</td>
+<td>52</td>
+<td>+22</td>
+</tr>
+<tr>
+<td>Software</td>
+<td>193</td>
+<td>226</td>
+<td>68</td>
+<td>+17</td>
+</tr>
+</tbody>
+</table>
+<p>Source: Company data, WSR Research estimates.</p>
+<h1 id="valuation">Valuation</h1>
+<h2 id="methodology">Methodology</h2>
+<p>We value ACME on a blend of a base-case DCF (60% weight) and forward
+EV/EBITDA relative to peers (40% weight), cross-checked against
+historical multiples and a bull/bear scenario range.</p>
+<h2 id="discounted-cash-flow">Discounted Cash Flow</h2>
+<p>Our base-case DCF assumes a 9.2% WACC, a 2.5% terminal growth rate,
+and an 18% terminal EBITDA margin, yielding an equity value of ~$4.9B or
+~$75/share.</p>
+<h2 id="comparable-companies">Comparable Companies</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Company</th>
+<th>Ticker</th>
+<th>Rating</th>
+<th>FY2026E EV/EBITDA (x)</th>
+<th>FY2026E P/E (x)</th>
+<th>FY2026E FCF Yield (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Acme Industrial</td>
+<td>ACME</td>
+<td>OW</td>
+<td>11.8</td>
+<td>18.5</td>
+<td>8.4</td>
+</tr>
+<tr>
+<td>Peer A</td>
+<td>PRA</td>
+<td>OW</td>
+<td>12.5</td>
+<td>20.1</td>
+<td>6.9</td>
+</tr>
+<tr>
+<td>Peer B</td>
+<td>PRB</td>
+<td>EW</td>
+<td>11.0</td>
+<td>17.2</td>
+<td>9.3</td>
+</tr>
+<tr>
+<td>Peer C</td>
+<td>PRC</td>
+<td>UW</td>
+<td>9.8</td>
+<td>15.0</td>
+<td>11.2</td>
+</tr>
+<tr>
+<td>Median</td>
+<td></td>
+<td></td>
+<td>11.4</td>
+<td>17.9</td>
+<td>8.9</td>
+</tr>
+</tbody>
+</table>
+<p>Source: FactSet, WSR Research estimates.</p>
+<h2 id="sensitivity-analysis">Sensitivity Analysis</h2>
+<table>
+<thead>
+<tr>
+<th>WACC  Terminal g</th>
+<th>1.5%</th>
+<th>2.5%</th>
+<th>3.5%</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8.2%</td>
+<td>72</td>
+<td>82</td>
+<td>94</td>
+</tr>
+<tr>
+<td>9.2%</td>
+<td>64</td>
+<td>75</td>
+<td>86</td>
+</tr>
+<tr>
+<td>10.2%</td>
+<td>58</td>
+<td>68</td>
+<td>79</td>
+</tr>
+</tbody>
+</table>
+<p>Source: WSR Research estimates. Values in USD/share.</p>
+<h2 id="target-price-derivation">Target Price Derivation</h2>
+<p>Blending the DCF ($75) and comps ($82) at 60/40 yields a $78.00
+target price. <strong>Upside/(downside) to target: +22%.</strong> Our
+bull case of $92 assumes faster margin delivery and multiple re-rating;
+our bear case of $52 assumes a demand recession and customer
+concentration losses.</p>
+<h1 id="investment-thesis">Investment Thesis</h1>
+<ol type="1">
+<li><strong>Margin inflection is visible and underappreciated.</strong>
+The Q3 2026 automated-manufacturing rollout removes ~600 bps of
+conversion-cost drag; consensus has not yet modeled the full FY2027E
+benefit.</li>
+<li><strong>Backlog conversion accelerates on infrastructure
+tailwinds.</strong> Orders tied to reshoring and grid modernization have
+grown 31% y/y for three consecutive quarters.</li>
+<li><strong>Aftermarket revenue inflection compounds.</strong> With the
+installed base doubling every ~4 years, attach-rate gains in parts and
+services should sustain 15%+ segment growth through FY2028E.</li>
+<li><strong>Multiple re-rating optionality.</strong> ACME screens at an
+~8% discount to the median peer on FY2026E EV/EBITDA despite superior
+growth and FCF generation.</li>
+</ol>
+<figure>
+<img src="assets/placeholder_chart.png"
+alt="Backlog conversion rate by quarter" />
+<figcaption aria-hidden="true">Backlog conversion rate by
+quarter</figcaption>
+</figure>
+<p>Source: Company disclosures, WSR Research estimates.</p>
+<h1 id="catalysts-event-calendar">Catalysts &amp; Event Calendar</h1>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Date</th>
+<th>Event</th>
+<th>Potential Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q3 2026</td>
+<td>Automation rollout completion</td>
+<td>Positive: margin step-change visible</td>
+</tr>
+<tr>
+<td>Oct 2026</td>
+<td>FY2026 Q3 earnings</td>
+<td>Positive if backlog conversion in-line+</td>
+</tr>
+<tr>
+<td>Nov 2026</td>
+<td>Investor day</td>
+<td>Neutral-to-positive: LT margin framework</td>
+</tr>
+<tr>
+<td>Feb 2027</td>
+<td>FY2026 results</td>
+<td>Key test of 17.5% margin delivery</td>
+</tr>
+</tbody>
+</table>
+<h1 id="risk-factors">Risk Factors</h1>
+<p><strong>Business &amp; operational risks.</strong> Customer
+concentration (top-3 ≈ 38% of revenue); project-execution risk around
+large automation deployments; supply-chain exposure to steel and
+specialty electronics.</p>
+<p><strong>Financial risks.</strong> Commodity-cost inflation pressure
+on gross margin; FX translation from ~30% non-USD revenue; leverage
+currently modest but acquisition-driven step-changes possible.</p>
+<p><strong>Regulatory &amp; macro risks.</strong> Trade-policy changes
+affecting reshoring incentives; cyclicality of manufacturing capex;
+wage-inflation pass-through limitations.</p>
+<p><strong>Market risks.</strong> Multiple compression in a rising-rate
+environment; peer de-rating contagion; index-removal risk if free-float
+liquidity deteriorates.</p>
+<h1 id="recommendation">Recommendation</h1>
+<h2 id="rating">Rating</h2>
+<p><strong>OVERWEIGHT</strong> — ACME’s total return is expected to
+exceed the average total return of its industry coverage universe over
+the next 12 months, on a risk-adjusted basis. <strong>USD 78.00 target
+price</strong> vs. current price of USD 64.00.</p>
+<h2 id="rating-definitions">Rating Definitions</h2>
+<ul>
+<li><strong>Overweight (OW)</strong> — expected to outperform the
+relevant industry coverage universe over the next 12 months.</li>
+<li><strong>Equal-weight (EW)</strong> — expected total return in line
+with the relevant industry coverage universe.</li>
+<li><strong>Underweight (UW)</strong> — expected to underperform the
+relevant industry coverage universe.</li>
+<li><strong>Not Rated (NR)</strong> — coverage not currently
+assigned.</li>
+</ul>
+<blockquote>
+<p>Rating scales vary by firm: Goldman Sachs uses Buy/Neutral/Sell plus
+a Conviction List; Morgan Stanley and J.P. Morgan use
+Overweight/Equal-weight/Underweight (with Not-Rated). Pick ONE scale,
+state it, and keep it consistent throughout.</p>
+</blockquote>
+<h2 id="key-assumptions-to-monitor">Key Assumptions to Monitor</h2>
+<ol type="1">
+<li>FY2026E margin delivery path toward 17.5% EBITDA margin.</li>
+<li>Backlog conversion rate vs. the 70% FY2026E coverage ratio.</li>
+<li>Aftermarket attach-rate and software renewal metrics.</li>
+<li>Commodity cost trajectory and pricing power.</li>
+</ol>
+<p><strong>Next catalyst:</strong> Q3 FY2026 earnings (October
+2026).</p>
+<h1 id="analyst-certification">Analyst Certification</h1>
+<p>I, Jane Doe, hereby certify that all of the views expressed in this
+report accurately reflect my personal views about the subject company
+and its securities, which have not been influenced by considerations of
+the firm’s business or client relationships. My compensation is based on
+various factors, including research quality, accuracy of estimates,
+investor feedback, and firm profitability — not on any specific
+recommendation contained in this report.</p>
+<h1 id="disclosures-disclaimer">Disclosures &amp; Disclaimer</h1>
+<p><strong>Analyst interests.</strong> The analysts responsible for this
+report do not beneficially own securities of the subject company, except
+as disclosed. WSR and/or its affiliates may hold positions in, act as
+market maker for, or perform services for companies covered in this
+report.</p>
+<p><strong>Nature of this report.</strong> This report is produced for
+information and educational purposes only. It is not an offer to sell or
+a solicitation of an offer to buy any security, and it does not
+constitute investment advice, a personal recommendation, or tax, legal,
+or accounting advice. It does not take into account the investment
+objectives, financial situation, or particular needs of any individual
+recipient. Recipients should make their own independent investment
+decisions and, where appropriate, seek professional advice.</p>
+<p><strong>Forward-looking statements.</strong> Statements herein that
+are not historical facts, including target prices, ratings, and
+financial forecasts, are forward-looking statements based on current
+estimates and assumptions that involve risks and uncertainties. Actual
+results may differ materially. Past performance is not a guide to future
+performance; future returns are not guaranteed, and a loss of original
+capital may occur. Target prices are expressions of opinion at the date
+of publication and are subject to change without notice.</p>
+<p><strong>No warranty.</strong> Information in this report is provided
+“as is” without warranty of any kind, express or implied. Data is
+believed reliable but is not guaranteed for accuracy or completeness.
+Third-party data providers make no warranties and shall have no
+liability for damages relating to such data.</p>
+<p><strong>Distribution.</strong> This report may not be reproduced,
+redistributed, or republished, in whole or in part, without the prior
+written consent of WSR Independent Research.</p>
+<p>© 2026 WSR Independent Research. All rights reserved.</p>
+<h1 id="appendix">Appendix</h1>
+<h2 id="a.-rating-distribution-for-illustration-finra-style">A. Rating
+Distribution (for illustration, FINRA-style)</h2>
+<table>
+<thead>
+<tr>
+<th>Rating Category</th>
+<th>Count</th>
+<th>% of Total</th>
+<th>% of IBC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Overweight / Buy</td>
+<td>152</td>
+<td>42</td>
+<td>47</td>
+</tr>
+<tr>
+<td>Equal-weight / Hold</td>
+<td>158</td>
+<td>43</td>
+<td>42</td>
+</tr>
+<tr>
+<td>Underweight / Sell</td>
+<td>56</td>
+<td>15</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Total</td>
+<td>366</td>
+<td>100</td>
+<td>99</td>
+</tr>
+</tbody>
+</table>
+<h2 id="b.-glossary">B. Glossary</h2>
+<ul>
+<li><strong>EBITDA</strong> — earnings before interest, taxes,
+depreciation, and amortization</li>
+<li><strong>EV/EBITDA</strong> — enterprise value divided by EBITDA</li>
+<li><strong>FCF yield</strong> — free cash flow divided by market
+capitalization</li>
+<li><strong>WACC</strong> — weighted average cost of capital</li>
+</ul>
+<h2 id="c.-data-sources">C. Data Sources</h2>
+<p>Company filings (10-K/10-Q/annual reports), company guidance and
+disclosures, FactSet, consensus estimates, and WSR Research estimates.
+All figures are in USD unless otherwise stated.</p>
+</body>
+</html>

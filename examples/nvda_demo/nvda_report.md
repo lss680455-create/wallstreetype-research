@@ -203,7 +203,7 @@ Version 1.0, September 10, 2026. Each quarterly update re-runs scenario probabil
 
 Source: Wall Street Research event calendar; dates per company disclosures (TBD at publication).
 
-The framework outlives the point target: re-derive on early upside, downgrade on schedule if F1–F5 trigger.
+The framework outlives the price target: re-derive on early upside, downgrade on schedule if F1–F5 trigger.
 
 # Recommendation
 

@@ -880,6 +880,12 @@ class DocxRenderer:
     def _render_table(self, rows, aligns):
         if not rows:
             return
+        # keep a short lead-in paragraph (e.g. "**Catalyst calendar:**") on the same
+        # page as the table's first row — prevents orphaned lead-ins at page bottom
+        if self.doc.paragraphs:
+            last_p = self.doc.paragraphs[-1]
+            if 0 < len(last_p.text.strip()) <= 150:
+                last_p.paragraph_format.keep_with_next = True
         ncols = max(len(cells) for _, cells, _ in rows)
         table = self.doc.add_table(rows=len(rows), cols=ncols)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
