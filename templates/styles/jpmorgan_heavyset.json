@@ -1,0 +1,49 @@
+{
+  "id": "jpmorgan_heavyset",
+  "display_name": "摩根大通（厚重风） / Heavyset",
+  "style_en": "Dense two-column, bold sans headers over serif body, slate-blue accents",
+  "style_zh": "高密度双栏；无衬线粗标题+衬线正文；灰蓝强调；灰底表头；紧凑行距",
+  "fonts": {
+    "body": "Georgia",
+    "heading": "Arial",
+    "mono": "Consolas"
+  },
+  "colors": {
+    "navy": "1A4C6E",
+    "accent": "2B6CA3",
+    "text": "1A1A1A",
+    "midgray": "595959",
+    "lightgray": "8A8A8A",
+    "rule": "D9D9D9",
+    "table_header_fill": "E8E8E8",
+    "table_header_text": "1A1A1A",
+    "table_zebra": null,
+    "rating_box_fill": "F4F7FA"
+  },
+  "layout": {
+    "margin_lr": 0.9,
+    "margin_tb": 0.8,
+    "body_size": 9.5,
+    "h1_size": 22,
+    "h2_size": 12.5,
+    "h3_size": 11,
+    "h1_font": "heading",
+    "line_spacing": 1.1
+  },
+  "tables": {
+    "vertical_rules": false,
+    "zebra": false,
+    "rule_above_header": true,
+    "rule_below_header": true
+  },
+  "rating_box": {
+    "style": "open",
+    "fill": "F4F7FA",
+    "border": false
+  },
+  "masthead": {
+    "rule_under": true,
+    "uppercase_meta": true
+  },
+  "_disclaimer": "Layout-style reference only. Visual characteristics were extracted from publicly available research reports; all institution names, logos and text marks are removed. Not affiliated with or endorsed by any institution."
+}

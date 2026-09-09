@@ -16,6 +16,8 @@ disclosure pages, and a "Page X of Y" footer.
     python md_to_docx.py report.md --pdf              # also export PDF (Word)
     python md_to_docx.py report.md --toc              # insert a TOC field
     python md_to_docx.py report.md --no-numbering     # sections unnumbered
+    python md_to_docx.py report.md --style goldman_hardline   # institution theme
+    python md_to_docx.py report.md --style my_theme.json      # custom theme file
 
   Dependencies (pip):
     python-docx            (required)
@@ -39,6 +41,7 @@ disclosure pages, and a "Page X of Y" footer.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -77,6 +80,191 @@ RATING_COLORS = {
     "underweight": RGBColor(0xB0, 0x30, 0x30),
     "sell":       RGBColor(0xB0, 0x30, 0x30),
 }
+
+# ----------------------------------------------------------------------------
+# Style themes — templates/styles/*.json drive fonts / colours / layout /
+# tables / rating box / masthead.  With no --style the built-in default below
+# reproduces the original hard-coded look exactly.
+# ----------------------------------------------------------------------------
+STYLES_DIR = Path(__file__).resolve().parent / "styles"
+
+DEFAULT_THEME_DATA = {
+    "id": "default",
+    "display_name": "Default (built-in Wall Street look)",
+    "fonts": {"body": "Calibri", "heading": "Calibri", "mono": "Consolas"},
+    "colors": {
+        "navy": "0B2545", "accent": "1F3864", "text": "333333",
+        "midgray": "595959", "lightgray": "8A8A8A", "rule": "BFBFBF",
+        "table_header_fill": "1F3864", "table_header_text": "FFFFFF",
+        "table_zebra": "F2F4F8", "rating_box_fill": "F2F4F8",
+        # extras used only by the legacy look (not part of the theme schema)
+        "table_grid": "C9CFD8", "code_text": "8B1A1A",
+        "code_fill": "F5F5F5", "link": "0563C1",
+    },
+    "layout": {"margin_lr": 0.95, "margin_tb": 0.85, "body_size": 10.0,
+               "h1_size": 14, "h2_size": 12, "h3_size": 11,
+               "h1_font": "body", "line_spacing": 1.08},
+    "tables": {"vertical_rules": True, "zebra": True,
+               "rule_above_header": False, "rule_below_header": False},
+    "rating_box": {"style": "band", "fill": "F2F4F8", "border": True},
+    "masthead": {"rule_under": True, "uppercase_meta": True},
+    "rating_colors": {
+        "overweight": "1E7B34", "buy": "1E7B34",
+        "equal-weight": "B07D2B", "hold": "B07D2B", "neutral": "B07D2B",
+        "underweight": "B03030", "sell": "B03030",
+    },
+}
+
+
+def _hex6(value, fallback: str) -> str:
+    """Normalise a colour value to a 6-digit uppercase hex string."""
+    if value is None:
+        return fallback
+    s = str(value).strip().lstrip("#")
+    if len(s) == 3:
+        s = "".join(ch * 2 for ch in s)
+    if len(s) != 6 or any(ch not in "0123456789abcdefABCDEF" for ch in s):
+        return fallback
+    return s.upper()
+
+
+def _rgb6(hexstr: str) -> RGBColor:
+    return RGBColor(int(hexstr[0:2], 16), int(hexstr[2:4], 16), int(hexstr[4:6], 16))
+
+
+class Theme:
+    """Resolved theme: every value falls back to the built-in default."""
+
+    def __init__(self, data: dict | None = None):
+        data = data if isinstance(data, dict) else {}
+
+        def section(name: str) -> dict:
+            merged = dict(DEFAULT_THEME_DATA[name])
+            val = data.get(name)
+            if isinstance(val, dict):
+                merged.update(val)
+            return merged
+
+        self.id = str(data.get("id") or DEFAULT_THEME_DATA["id"])
+        self.display_name = str(data.get("display_name") or self.id)
+        self.fonts = section("fonts")
+        self.colors = section("colors")
+        self.layout = section("layout")
+        self.tables = section("tables")
+        self.rating_box = section("rating_box")
+        self.masthead = section("masthead")
+
+        rc = data.get("rating_colors")
+        if isinstance(rc, dict):
+            self.rating_colors = {k: _rgb6(_hex6(v, "000000")) for k, v in rc.items()}
+        elif data:
+            # external theme without an explicit map: keep rating text neutral
+            self.rating_colors = {}
+        else:
+            self.rating_colors = {k: _rgb6(v)
+                                  for k, v in DEFAULT_THEME_DATA["rating_colors"].items()}
+
+        # fonts
+        self.body_font = str(self.fonts["body"])
+        self.heading_font = str(self.fonts["heading"])
+        self.mono_font = str(self.fonts["mono"])
+
+        # colours (hex strings + RGBColor twins)
+        c = self.colors
+        self.navy_hex = _hex6(c.get("navy"), "0B2545")
+        self.accent_hex = _hex6(c.get("accent"), "1F3864")
+        self.text_hex = _hex6(c.get("text"), "333333")
+        self.midgray_hex = _hex6(c.get("midgray"), "595959")
+        self.lightgray_hex = _hex6(c.get("lightgray"), "8A8A8A")
+        self.rule = _hex6(c.get("rule"), "BFBFBF")
+        self.table_header_fill = _hex6(c.get("table_header_fill"), "1F3864")
+        self.table_header_text_hex = _hex6(c.get("table_header_text"), "FFFFFF")
+        self.table_zebra = _hex6(c.get("table_zebra"), "") or None
+        rb_raw = data.get("rating_box") if isinstance(data.get("rating_box"), dict) else {}
+        self.rating_fill = _hex6(rb_raw.get("fill"),
+                                 _hex6(c.get("rating_box_fill"), "F2F4F8"))
+        self.table_grid = _hex6(c.get("table_grid"), self.rule)
+        self.code_fill = _hex6(c.get("code_fill"), self.table_zebra or "F5F5F5")
+        self.code_text_hex = _hex6(c.get("code_text"), self.navy_hex)
+        self.link_hex = _hex6(c.get("link"), self.accent_hex)
+
+        self.navy = _rgb6(self.navy_hex)
+        self.accent = _rgb6(self.accent_hex)
+        self.text = _rgb6(self.text_hex)
+        self.midgray = _rgb6(self.midgray_hex)
+        self.lightgray = _rgb6(self.lightgray_hex)
+        self.rule_rgb = _rgb6(self.rule)
+        self.table_header_text = _rgb6(self.table_header_text_hex)
+        self.code_text = _rgb6(self.code_text_hex)
+        self.link = _rgb6(self.link_hex)
+
+        # layout
+        L = self.layout
+        self.margin_lr = float(L.get("margin_lr") or 0.95)
+        self.margin_tb = float(L.get("margin_tb") or 0.85)
+        self.body_size = float(L.get("body_size") or 10.0)
+        self.h1_size = float(L.get("h1_size") or 14)
+        self.h2_size = float(L.get("h2_size") or 12)
+        self.h3_size = float(L.get("h3_size") or 11)
+        self.h4_size = max(self.h3_size - 0.5, 9.0)
+        self.h1_font = ("heading"
+                        if str(L.get("h1_font", "heading")).strip().lower() == "heading"
+                        else "body")
+        self.line_spacing = float(L.get("line_spacing") or 1.08)
+        self.table_size = round(self.body_size - 1.5, 1)
+
+        # tables
+        self.vertical_rules = bool(self.tables.get("vertical_rules", True))
+        self.zebra = bool(self.tables.get("zebra", True))
+        self.rule_above_header = bool(self.tables.get("rule_above_header", False))
+        self.rule_below_header = bool(self.tables.get("rule_below_header", False))
+
+        # rating box
+        self.rating_style = str(self.rating_box.get("style", "band")).strip().lower()
+        self.rating_border = bool(self.rating_box.get("border", True))
+
+        # masthead
+        self.masthead_rule = bool(self.masthead.get("rule_under", True))
+        self.uppercase_meta = bool(self.masthead.get("uppercase_meta", True))
+
+    @property
+    def h1_font_name(self) -> str:
+        return self.heading_font if self.h1_font == "heading" else self.body_font
+
+
+def available_styles() -> list[str]:
+    if not STYLES_DIR.is_dir():
+        return []
+    return sorted(p.stem for p in STYLES_DIR.glob("*.json"))
+
+
+def load_theme(style: str | None) -> Theme:
+    """Resolve --style: None -> built-in default; id -> styles/<id>.json; path -> file."""
+    if not style:
+        return Theme({})
+    raw = str(style).strip()
+    cand = Path(raw)
+    if not (cand.is_file() and cand.suffix.lower() == ".json"):
+        for probe in (STYLES_DIR / f"{raw}.json", STYLES_DIR / raw, cand):
+            if probe.is_file():
+                cand = probe
+                break
+    if not cand.is_file():
+        raise SystemExit(
+            f"error: unknown --style {raw!r}. Built-in themes: "
+            f"{', '.join(available_styles()) or '(none found)'}; "
+            "or pass a path to a theme .json")
+    try:
+        data = json.loads(cand.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        raise SystemExit(f"error: cannot parse theme {cand}: {exc}")
+    if not isinstance(data, dict):
+        raise SystemExit(f"error: theme {cand} must be a JSON object")
+    theme = Theme(data)
+    if not data.get("id"):
+        theme.id = cand.stem
+    return theme
+
 
 NUMERIC_RE = re.compile(
     r"^[\(\[-]?[$€£¥]?[\d,]+(?:\.[\d]+)?%?[\)\]]?$|"
@@ -185,7 +373,7 @@ def _unquote(v: str):
 # docx low-level helpers
 # ----------------------------------------------------------------------------
 def _set_font(run, name="Calibri", size=10, bold=False, italic=False,
-              color=None, caps=False):
+              color=None, caps=False, eastasia=EASTASIA):
     f = run.font
     f.name = name
     f.size = Pt(size)
@@ -205,7 +393,7 @@ def _set_font(run, name="Calibri", size=10, bold=False, italic=False,
             del rFonts.attrib[attr]
     rFonts.set(qn("w:ascii"), name)
     rFonts.set(qn("w:hAnsi"), name)
-    rFonts.set(qn("w:eastAsia"), EASTASIA)
+    rFonts.set(qn("w:eastAsia"), eastasia)
     if caps:
         c = OxmlElement("w:caps")
         c.set(qn("w:val"), "1")
@@ -242,17 +430,27 @@ def _shade_cell(cell, hexfill: str):
     tcPr.append(shd)
 
 
-def _cell_border(cell, edges=("top", "bottom", "left", "right"), color="1F3864", sz=6):
+def _cell_border(cell, edges=("top", "bottom", "left", "right"), color="1F3864",
+                 sz=6, edge_specs=None):
+    """Apply cell borders. `edge_specs` = {edge: (hex_color, sz)} merged over `edges`."""
     tcPr = cell._tc.get_or_add_tcPr()
-    borders = OxmlElement("w:tcBorders")
-    for e in edges:
+    borders = tcPr.find(qn("w:tcBorders"))
+    if borders is None:
+        borders = OxmlElement("w:tcBorders")
+        tcPr.append(borders)
+    specs = {e: (color, sz) for e in edges}
+    if edge_specs:
+        specs.update(edge_specs)
+    for e in ("top", "bottom", "left", "right", "insideH", "insideV"):
+        if e not in specs:
+            continue
+        c, s = specs[e]
         el = OxmlElement(f"w:{e}")
         el.set(qn("w:val"), "single")
-        el.set(qn("w:sz"), str(sz))
+        el.set(qn("w:sz"), str(s))
         el.set(qn("w:space"), "0")
-        el.set(qn("w:color"), color)
+        el.set(qn("w:color"), c)
         borders.append(el)
-    tcPr.append(borders)
 
 
 def _cell_margins(cell, top=60, bottom=60, left=100, right=100):
@@ -488,48 +686,66 @@ class MDWalker(HTMLParser):
 # Renderer
 # ----------------------------------------------------------------------------
 class DocxRenderer:
-    def __init__(self, meta: dict, md_path: Path, opts):
+    def __init__(self, meta: dict, md_path: Path, opts, theme: Theme | None = None):
         self.meta = meta
         self.md_dir = md_path.parent
         self.opts = opts
+        self.th = theme or Theme({})
         self.exhibit_no = 0
         self.h1_no = 0
         self.doc = Document()
         self._setup_page()
         self._setup_styles()
 
+    # -- theme helpers ------------------------------------------------------
+    def _font(self, run, name=None, size=None, bold=False, italic=False,
+              color=None, caps=False, mono=False, heading=False):
+        """Theme-aware _set_font: defaults to the theme body/heading/mono face."""
+        if name is None:
+            name = self.th.mono_font if mono else (
+                self.th.heading_font if heading else self.th.body_font)
+        if size is None:
+            size = self.th.body_size
+        _set_font(run, name=name, size=size, bold=bold, italic=italic,
+                  color=color, caps=caps)
+
+    def _meta_case(self, text: str) -> str:
+        return text.upper() if self.th.uppercase_meta else text
+
     # -- document scaffolding ----------------------------------------------
     def _setup_page(self):
+        th = self.th
         sec = self.doc.sections[0]
         sec.page_width, sec.page_height = Inches(8.5), Inches(11)
-        sec.left_margin = sec.right_margin = Inches(0.95)
-        sec.top_margin, sec.bottom_margin = Inches(0.85), Inches(0.85)
+        sec.left_margin = sec.right_margin = Inches(th.margin_lr)
+        sec.top_margin, sec.bottom_margin = Inches(th.margin_tb), Inches(th.margin_tb)
 
     def _setup_styles(self):
+        th = self.th
         st = self.doc.styles
         normal = st["Normal"]
-        normal.font.name = "Calibri"
-        normal.font.size = Pt(10)
-        self._style_rfonts(normal.element.get_or_add_rPr(), "Calibri")
+        normal.font.name = th.body_font
+        normal.font.size = Pt(th.body_size)
+        self._style_rfonts(normal.element.get_or_add_rPr(), th.body_font)
         pf = normal.paragraph_format
         pf.space_after = Pt(6)
-        pf.line_spacing = 1.08
+        pf.line_spacing = th.line_spacing
 
-        for name, size, bold, color, before, after in (
-                ("Heading 1", 14, True, NAVY, 16, 8),
-                ("Heading 2", 12, True, ACCENT, 10, 4),
-                ("Heading 3", 11, True, DARKGRAY, 8, 3),
-                ("Heading 4", 10.5, True, MIDGRAY, 6, 2)):
+        for name, size, bold, color, before, after, fname in (
+                ("Heading 1", th.h1_size, True, th.navy, 16, 8, th.h1_font_name),
+                ("Heading 2", th.h2_size, True, th.accent, 10, 4, th.heading_font),
+                ("Heading 3", th.h3_size, True, th.text, 8, 3, th.heading_font),
+                ("Heading 4", th.h4_size, True, th.midgray, 6, 2, th.heading_font)):
             h = st[name]
-            h.font.name = "Calibri"; h.font.size = Pt(size); h.font.bold = bold
+            h.font.name = fname; h.font.size = Pt(size); h.font.bold = bold
             h.font.color.rgb = color
             h.paragraph_format.space_before = Pt(before)
             h.paragraph_format.space_after = Pt(after)
             h.paragraph_format.keep_with_next = True
-            self._style_rfonts(h.element.get_or_add_rPr(), "Calibri")
+            self._style_rfonts(h.element.get_or_add_rPr(), fname)
 
     @staticmethod
-    def _style_rfonts(rpr, name):
+    def _style_rfonts(rpr, name, eastasia=EASTASIA):
         """Ensure EXACTLY ONE w:rFonts element with ascii/hAnsi/eastAsia set.
 
         python-docx's font.name setter creates <w:rFonts w:ascii w:hAnsi> but
@@ -547,25 +763,27 @@ class DocxRenderer:
                 del rf.attrib[attr]
         rf.set(qn("w:ascii"), name)
         rf.set(qn("w:hAnsi"), name)
-        rf.set(qn("w:eastAsia"), EASTASIA)
+        rf.set(qn("w:eastAsia"), eastasia)
 
     # -- cover --------------------------------------------------------------
     def render_cover(self):
         m = self.meta
+        th = self.th
         firm = m.get("firm", "Independent Equity Research")
-        rtype = m.get("report_type", "EQUITY RESEARCH").upper()
+        rtype = m.get("report_type", "Equity Research")
         date = m.get("date", "")
 
         # top line: firm | date
         p = self.doc.add_paragraph()
         p.paragraph_format.space_after = Pt(2)
-        r = p.add_run(firm.upper())
-        _set_font(r, size=9, bold=True, color=ACCENT, caps=True)
+        r = p.add_run(self._meta_case(firm))
+        self._font(r, size=9, bold=True, color=th.accent, caps=th.uppercase_meta)
         _set_char_spacing(r, 14)
         if date:
             r2 = p.add_run(f"\t{date}")
-            _set_font(r2, size=9, color=MIDGRAY)
-        _para_border(p, "bottom", RULEGRAY, sz=6)
+            self._font(r2, size=9, color=th.midgray)
+        if th.masthead_rule:
+            _para_border(p, "bottom", th.rule, sz=6)
 
         # logo
         if m.get("logo"):
@@ -578,22 +796,23 @@ class DocxRenderer:
         p = self.doc.add_paragraph()
         p.paragraph_format.space_before = Pt(20)
         p.paragraph_format.space_after = Pt(0)
-        r = p.add_run("EQUITY RESEARCH")
-        _set_font(r, size=8, color=MIDGRAY, caps=True)
+        r = p.add_run(self._meta_case("Equity Research"))
+        self._font(r, size=8, color=th.midgray, caps=th.uppercase_meta)
         _set_char_spacing(r, 18)
         p = self.doc.add_paragraph()
         p.paragraph_format.space_after = Pt(10)
-        r = p.add_run(rtype)
-        _set_font(r, size=15, bold=True, color=ACCENT, caps=True)
+        r = p.add_run(self._meta_case(rtype))
+        self._font(r, size=15, bold=True, color=th.accent, caps=th.uppercase_meta)
         _set_char_spacing(r, 16)
-        _para_border(p, "bottom", "1F3864", sz=10)
+        if th.masthead_rule:
+            _para_border(p, "bottom", th.accent_hex, sz=10)
 
         # company
         p = self.doc.add_paragraph()
         p.paragraph_format.space_before = Pt(14)
         p.paragraph_format.space_after = Pt(0)
         r = p.add_run(m.get("company", ""))
-        _set_font(r, size=25, bold=True, color=NAVY)
+        self._font(r, size=25, bold=True, color=th.navy)
         ident = m.get("ticker", "")
         if m.get("exchange"):
             ident += f" · {m['exchange']}"
@@ -602,13 +821,13 @@ class DocxRenderer:
         p2 = self.doc.add_paragraph()
         p2.paragraph_format.space_after = Pt(6)
         r = p2.add_run(ident)
-        _set_font(r, size=10.5, color=MIDGRAY)
+        self._font(r, size=10.5, color=th.midgray)
 
         # title
         p = self.doc.add_paragraph()
         p.paragraph_format.space_after = Pt(14)
         r = p.add_run(m.get("title", ""))
-        _set_font(r, size=13.5, bold=True, color=DARKGRAY, italic=True)
+        self._font(r, size=13.5, bold=True, color=th.text, italic=True)
 
         self._render_rating_box()
         self._render_key_data_line()
@@ -626,56 +845,90 @@ class DocxRenderer:
         p.paragraph_format.space_before = Pt(6)
         r = p.add_run(f"© {m.get('copyright_year', '')} {firm} · "
                       "See important disclosures on the final pages of this report.")
-        _set_font(r, size=7.5, color=LIGHTGRAY)
+        self._font(r, size=7.5, color=th.lightgray)
 
     def _render_rating_box(self):
         m = self.meta
+        th = self.th
         labels = ["Rating", "Target Price", "Current Price", "Upside/(Downside)"]
         values = [m.get("rating", "—"),
                   m.get("target_price_prev") and
-                  f"{m['currency']} {m.get('target_price_prev')} → {m.get('currency')} {m.get('target_price')}"
+                  f"{m['currency']} {m.get('target_price_prev')} → {m['currency']} {m.get('target_price')}"
                   or f"{m.get('currency', '$')} {m.get('target_price', '—')}",
                   f"{m.get('currency', '$')} {m.get('current_price', '—')}",
                   m.get("upside", "—")]
-        rating_color = NAVY
-        for k, c in RATING_COLORS.items():
+        rating_color = th.navy
+        for k, c in th.rating_colors.items():
             if k in m.get("rating", "").lower():
                 rating_color = c
                 break
+        style = th.rating_style
         table = self.doc.add_table(rows=2, cols=4)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table.autofit = True
-        width = Inches(6.6 / 4)
         for j, (lab, val) in enumerate(zip(labels, values)):
             for i in (0, 1):
                 cell = table.cell(i, j)
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 _cell_margins(cell)
-                if i == 0:
-                    _shade_cell(cell, SHADE_HEAD)
-                    _cell_border(cell)
-                    p = cell.paragraphs[0]
-                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    r = p.add_run(lab.upper())
-                    _set_font(r, size=8, bold=True, color=RGBColor(0xFF, 0xFF, 0xFF), caps=True)
-                    _set_char_spacing(r, 8)
-                else:
-                    _shade_cell(cell, SHADE_ALT)
-                    _cell_border(cell)
-                    p = cell.paragraphs[0]
-                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    r = p.add_run(val)
-                    _set_font(r, size=12, bold=True,
-                              color=rating_color if j == 0 else NAVY)
+                p = cell.paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                if style == "open":
+                    if i == 0:
+                        r = p.add_run(self._meta_case(lab))
+                        self._font(r, size=8, bold=True, color=th.midgray,
+                                   caps=th.uppercase_meta)
+                        _set_char_spacing(r, 8)
+                        _cell_border(cell, ("bottom",), th.rule, sz=6)
+                    else:
+                        r = p.add_run(val)
+                        self._font(r, size=12, bold=True,
+                                   color=rating_color if j == 0 else th.navy)
+                        if th.rating_border:
+                            _cell_border(cell, color=th.rule, sz=4)
+                elif style == "rail":
+                    _shade_cell(cell, th.rating_fill)
+                    specs = {}
+                    if j == 0:
+                        specs["left"] = (th.accent_hex, 18)
+                    if th.rating_border:
+                        specs.update({"top": (th.rule, 4), "bottom": (th.rule, 4),
+                                      "right": (th.rule, 4)})
+                    if specs:
+                        _cell_border(cell, edges=(), edge_specs=specs)
+                    if i == 0:
+                        r = p.add_run(self._meta_case(lab))
+                        self._font(r, size=8, bold=True, color=th.midgray,
+                                   caps=th.uppercase_meta)
+                        _set_char_spacing(r, 8)
+                    else:
+                        r = p.add_run(val)
+                        self._font(r, size=12, bold=True,
+                                   color=rating_color if j == 0 else th.navy)
+                else:  # "band": filled label band + value row (legacy default)
+                    if i == 0:
+                        _shade_cell(cell, th.table_header_fill)
+                        r = p.add_run(self._meta_case(lab))
+                        self._font(r, size=8, bold=True, color=th.table_header_text,
+                                   caps=th.uppercase_meta)
+                        _set_char_spacing(r, 8)
+                    else:
+                        _shade_cell(cell, th.rating_fill)
+                        r = p.add_run(val)
+                        self._font(r, size=12, bold=True,
+                                   color=rating_color if j == 0 else th.navy)
+                    if th.rating_border:
+                        _cell_border(cell, color=th.table_header_fill, sz=6)
         if m.get("rating_note"):
             p = self.doc.add_paragraph()
             p.paragraph_format.space_before = Pt(3)
             p.paragraph_format.space_after = Pt(4)
             r = p.add_run(m["rating_note"])
-            _set_font(r, size=8, italic=True, color=MIDGRAY)
+            self._font(r, size=8, italic=True, color=th.midgray)
 
     def _render_key_data_line(self):
         m = self.meta
+        th = self.th
         bits = []
         if m.get("market_cap"):
             bits.append(f"Market Cap  {m['market_cap']}")
@@ -698,29 +951,30 @@ class DocxRenderer:
             if i:
                 p.add_run("   ·   ")
             r = p.add_run(b)
-            _set_font(r, size=8.5, color=MIDGRAY)
+            self._font(r, size=8.5, color=th.midgray)
 
     def _render_analysts(self):
         m = self.meta
+        th = self.th
         analysts = m.get("analysts") or []
         if not analysts:
             return
         p = self.doc.add_paragraph()
         p.paragraph_format.space_before = Pt(14)
         p.paragraph_format.space_after = Pt(2)
-        r = p.add_run("ANALYSTS")
-        _set_font(r, size=8, bold=True, color=ACCENT, caps=True)
+        r = p.add_run(self._meta_case("Analysts"))
+        self._font(r, size=8, bold=True, color=th.accent, caps=th.uppercase_meta)
         _set_char_spacing(r, 12)
         for a in analysts:
             p = self.doc.add_paragraph()
             p.paragraph_format.space_after = Pt(1)
             r = p.add_run(a.get("name", ""))
-            _set_font(r, size=10.5, bold=True, color=NAVY)
+            self._font(r, size=10.5, bold=True, color=th.navy)
             extra = " · ".join(x for x in (a.get("title"), a.get("phone"),
                                            a.get("email")) if x)
             if extra:
                 r2 = p.add_run(f"   {extra}")
-                _set_font(r2, size=8.5, color=MIDGRAY)
+                self._font(r2, size=8.5, color=th.midgray)
 
     def _render_conflict_line(self):
         m = self.meta
@@ -731,7 +985,7 @@ class DocxRenderer:
         p.paragraph_format.space_before = Pt(14)
         p.paragraph_format.space_after = Pt(2)
         r = p.add_run(text)
-        _set_font(r, size=8, italic=True, color=MIDGRAY)
+        self._font(r, size=8, italic=True, color=self.th.midgray)
 
     # -- body ---------------------------------------------------------------
     def render_body(self, blocks):
@@ -756,10 +1010,10 @@ class DocxRenderer:
                 self._render_quote(b["inlines"])
             elif t == "source":
                 self._render_para(b["inlines"], size=7.5, italic=True,
-                                  color=MIDGRAY, space_after=8)
+                                  color=self.th.midgray, space_after=8)
             elif t == "caption":
                 self._render_para(b["inlines"], size=8.5, bold=True,
-                                  color=MIDGRAY, space_after=2,
+                                  color=self.th.midgray, space_after=2,
                                   keep_with_next=True)
             elif t == "list":
                 self._render_list(b["list_type"], b["items"])
@@ -771,9 +1025,10 @@ class DocxRenderer:
                 self._render_codeblock(b["inlines"])
             elif t == "hr":
                 p = self.doc.add_paragraph()
-                _para_border(p, "bottom", RULEGRAY, sz=4)
+                _para_border(p, "bottom", self.th.rule, sz=4)
 
     def _render_heading(self, level, inlines):
+        th = self.th
         text = self._sub("".join(t for t, _ in inlines))
         if level == 1 and not self.opts.no_numbering:
             self.h1_no += 1
@@ -781,17 +1036,21 @@ class DocxRenderer:
         p = self.doc.add_paragraph(style=f"Heading {min(level, 4)}")
         r = p.add_run(text)
         if level == 1:
-            _set_font(r, size=14, bold=True, color=NAVY)
-            _para_border(p, "bottom", RULEGRAY, sz=4)
+            self._font(r, name=th.h1_font_name, size=th.h1_size, bold=True,
+                       color=th.navy)
+            _para_border(p, "bottom", th.rule, sz=4)
         elif level == 2:
-            _set_font(r, size=12, bold=True, color=ACCENT)
+            self._font(r, heading=True, size=th.h2_size, bold=True, color=th.accent)
         elif level == 3:
-            _set_font(r, size=11, bold=True, color=DARKGRAY)
+            self._font(r, heading=True, size=th.h3_size, bold=True, color=th.text)
         else:
-            _set_font(r, size=10.5, bold=True, color=MIDGRAY, italic=True)
+            self._font(r, heading=True, size=th.h4_size, bold=True,
+                       color=th.midgray, italic=True)
 
-    def _render_para(self, inlines, size=10, bold=False, italic=False,
+    def _render_para(self, inlines, size=None, bold=False, italic=False,
                      color=None, indent=0, space_after=6, keep_with_next=False):
+        if size is None:
+            size = self.th.body_size
         p = self.doc.add_paragraph()
         pf = p.paragraph_format
         pf.space_after = Pt(space_after)
@@ -803,8 +1062,10 @@ class DocxRenderer:
                             base_italic=italic, base_color=color)
         return p
 
-    def _write_inlines(self, p, inlines, size=10, base_bold=False,
+    def _write_inlines(self, p, inlines, size=None, base_bold=False,
                        base_italic=False, base_color=None):
+        if size is None:
+            size = self.th.body_size
         for text, f in inlines:
             text = self._sub(text)
             if "\n" in text:
@@ -822,32 +1083,38 @@ class DocxRenderer:
                               italic=base_italic or f.get("italic"),
                               color=base_color, code=f.get("code"), link=f.get("link"))
 
-    def _add_run(self, p, text, size=10, bold=False, italic=False, color=None,
+    def _add_run(self, p, text, size=None, bold=False, italic=False, color=None,
                  code=False, link=False):
+        th = self.th
+        if size is None:
+            size = th.body_size
         r = p.add_run(text)
         if code:
-            _set_font(r, name="Consolas", size=max(size - 1, 7), color=RGBColor(0x8B, 0x1A, 0x1A))
+            self._font(r, name=th.mono_font, size=max(size - 1, 7),
+                       color=th.code_text)
         elif link:
-            _set_font(r, size=size, color=RGBColor(0x05, 0x63, 0xC1))
+            self._font(r, size=size, color=th.link)
             r.font.underline = True
         else:
-            _set_font(r, size=size, bold=bold, italic=italic, color=color)
+            self._font(r, size=size, bold=bold, italic=italic, color=color)
         return r
 
     def _render_quote(self, inlines):
+        th = self.th
         p = self.doc.add_paragraph()
         pf = p.paragraph_format
         pf.left_indent = Inches(0.3)
         pf.space_after = Pt(6)
-        _para_border(p, "left", "1F3864", sz=12, space=6)
-        self._write_inlines(p, inlines, size=9.5, base_italic=True, base_color=MIDGRAY)
+        _para_border(p, "left", th.accent_hex, sz=12, space=6)
+        self._write_inlines(p, inlines, size=9.5, base_italic=True,
+                            base_color=th.midgray)
 
     def _render_list(self, list_type, items):
         style = "List Number" if list_type == "ol" else "List Bullet"
         for item in items:
             p = self.doc.add_paragraph(style=style)
             p.paragraph_format.space_after = Pt(3)
-            self._write_inlines(p, item, size=10)
+            self._write_inlines(p, item, size=self.th.body_size)
 
     def _sub(self, text: str) -> str:
         """Replace {{FIELD}} tokens with frontmatter values (case-insensitive)."""
@@ -880,6 +1147,7 @@ class DocxRenderer:
     def _render_table(self, rows, aligns):
         if not rows:
             return
+        th = self.th
         # keep a short lead-in paragraph (e.g. "**Catalyst calendar:**") on the same
         # page as the table's first row — prevents orphaned lead-ins at page bottom
         if self.doc.paragraphs:
@@ -892,20 +1160,21 @@ class DocxRenderer:
         table.autofit = False
         col_w = Inches(6.6 / ncols)
         numeric_cols = [self._is_numeric_col(rows, j) for j in range(ncols)]
+        has_head = any(is_head for is_head, _, _ in rows)
         # repeat the header row on every page a table spans (pagination sanity)
         trPr = table.rows[0]._tr.get_or_add_trPr()
-        th = OxmlElement("w:tblHeader")
-        th.set(qn("w:val"), "true")
-        trPr.append(th)
+        th_el = OxmlElement("w:tblHeader")
+        th_el.set(qn("w:val"), "true")
+        trPr.append(th_el)
         for i, (is_head, cells, cell_aligns) in enumerate(rows):
             for j in range(ncols):
                 cell = table.cell(i, j)
                 cell.width = col_w
                 _cell_margins(cell, top=30, bottom=30, left=70, right=70)
                 if is_head:
-                    _shade_cell(cell, SHADE_HEAD)
-                elif i % 2 == 0:
-                    _shade_cell(cell, SHADE_ALT)
+                    _shade_cell(cell, th.table_header_fill)
+                elif th.zebra and th.table_zebra and i % 2 == 0:
+                    _shade_cell(cell, th.table_zebra)
                 p = cell.paragraphs[0]
                 p.paragraph_format.space_after = Pt(0)
                 if numeric_cols[j]:
@@ -915,26 +1184,44 @@ class DocxRenderer:
                 elif j < len(cell_aligns) and cell_aligns[j] == "right":
                     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
                 inlines = cells[j] if j < len(cells) else []
-                self._write_inlines(p, inlines, size=8.5,
+                self._write_inlines(p, inlines, size=th.table_size,
                                     base_bold=is_head,
-                                    base_color=RGBColor(0xFF, 0xFF, 0xFF) if is_head else None)
-        # light grid
+                                    base_color=th.table_header_text if is_head else None)
+        # grid: hairline horizontal rules always, verticals only when themed on
+        wanted = {"top", "bottom", "insideH"}
+        if th.vertical_rules:
+            wanted |= {"left", "right", "insideV"}
         tblPr = table._tbl.tblPr
         borders = OxmlElement("w:tblBorders")
         for e in ("top", "left", "bottom", "right", "insideH", "insideV"):
             el = OxmlElement(f"w:{e}")
-            el.set(qn("w:val"), "single")
-            el.set(qn("w:sz"), "4")
-            el.set(qn("w:color"), "C9CFD8")
+            if e in wanted:
+                el.set(qn("w:val"), "single")
+                el.set(qn("w:sz"), "4")
+                el.set(qn("w:color"), th.table_grid)
+            else:
+                el.set(qn("w:val"), "none")
+                el.set(qn("w:sz"), "0")
+                el.set(qn("w:space"), "0")
+                el.set(qn("w:color"), "auto")
             borders.append(el)
         tblPr.append(borders)
+        # theme header rules: stronger line above and/or below the header row
+        if has_head and (th.rule_above_header or th.rule_below_header):
+            edges = []
+            if th.rule_above_header:
+                edges.append("top")
+            if th.rule_below_header:
+                edges.append("bottom")
+            for j in range(ncols):
+                _cell_border(table.cell(0, j), tuple(edges), th.navy_hex, sz=12)
 
     def _render_img(self, src, alt):
         img_path = self.md_dir / src if src else None
         if not img_path or not img_path.exists():
             p = self.doc.add_paragraph()
             r = p.add_run(f"[missing image: {src}]")
-            _set_font(r, size=9, italic=True, color=LIGHTGRAY)
+            self._font(r, size=9, italic=True, color=self.th.lightgray)
             return
         self.exhibit_no += 1
         self._render_figure(img_path, alt)
@@ -947,7 +1234,7 @@ class DocxRenderer:
         p.paragraph_format.keep_with_next = True
         cap = alt or "Price performance"
         r = p.add_run(f"Exhibit {self.exhibit_no}:  {cap}")
-        _set_font(r, size=8.5, bold=True, color=MIDGRAY)
+        self._font(r, size=8.5, bold=True, color=self.th.midgray)
         pic_p = self.doc.add_paragraph()
         pic_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         pic_p.paragraph_format.space_after = Pt(2)
@@ -962,17 +1249,20 @@ class DocxRenderer:
         # shading
         pPr = p._p.get_or_add_pPr()
         shd = OxmlElement("w:shd")
-        shd.set(qn("w:val"), "clear"); shd.set(qn("w:fill"), SHADE_CODE)
+        shd.set(qn("w:val"), "clear"); shd.set(qn("w:fill"), self.th.code_fill)
         pPr.append(shd)
-        self._write_inlines(p, inlines, size=8, base_color=None)
+        self._write_inlines(p, inlines,
+                            size=max(round(self.th.body_size - 2, 1), 7.0),
+                            base_color=None)
 
     # -- header / footer (body section) -------------------------------------
     def add_body_section(self):
         m = self.meta
+        th = self.th
         sec = self.doc.add_section(WD_SECTION.NEW_PAGE)
         sec.page_width, sec.page_height = Inches(8.5), Inches(11)
-        sec.left_margin = sec.right_margin = Inches(0.95)
-        sec.top_margin, sec.bottom_margin = Inches(0.85), Inches(0.85)
+        sec.left_margin = sec.right_margin = Inches(th.margin_lr)
+        sec.top_margin, sec.bottom_margin = Inches(th.margin_tb), Inches(th.margin_tb)
         sec.header.is_linked_to_previous = False
         sec.footer.is_linked_to_previous = False
 
@@ -980,21 +1270,22 @@ class DocxRenderer:
         hp = sec.header.paragraphs[0]
         hp.paragraph_format.tab_stops.add_tab_stop(Inches(6.6), WD_ALIGN_PARAGRAPH.RIGHT)
         r = hp.add_run(m.get("header_title") or f"{m.get('company', '')} ({m.get('ticker', '')})")
-        _set_font(r, size=8, bold=True, color=MIDGRAY, caps=True)
+        self._font(r, size=8, bold=True, color=th.midgray, caps=th.uppercase_meta)
         r = hp.add_run(f"\t{m.get('date', '')}")
-        _set_font(r, size=8, color=LIGHTGRAY)
-        _para_border(hp, "bottom", RULEGRAY, sz=4)
+        self._font(r, size=8, color=th.lightgray)
+        if th.masthead_rule:
+            _para_border(hp, "bottom", th.rule, sz=4)
 
         # footer: org left, "Page X of Y" right
         fp = sec.footer.paragraphs[0]
         fp.paragraph_format.tab_stops.add_tab_stop(Inches(6.6), WD_ALIGN_PARAGRAPH.RIGHT)
         r = fp.add_run(m.get("footer_org", ""))
-        _set_font(r, size=7.5, color=LIGHTGRAY)
+        self._font(r, size=7.5, color=th.lightgray)
         r = fp.add_run("\tPage ")
-        _set_font(r, size=7.5, color=LIGHTGRAY)
+        self._font(r, size=7.5, color=th.lightgray)
         _add_field(fp, "PAGE")
         r = fp.add_run(" of ")
-        _set_font(r, size=7.5, color=LIGHTGRAY)
+        self._font(r, size=7.5, color=th.lightgray)
         _add_field(fp, "NUMPAGES")
         return sec
 
@@ -1002,7 +1293,7 @@ class DocxRenderer:
         p = self.doc.add_paragraph()
         p.paragraph_format.space_before = Pt(6)
         r = p.add_run("Table of Contents")
-        _set_font(r, size=13, bold=True, color=NAVY)
+        self._font(r, size=13, bold=True, color=self.th.navy)
         p2 = self.doc.add_paragraph()
         run = p2.add_run()
         fld1 = OxmlElement("w:fldChar"); fld1.set(qn("w:fldCharType"), "begin")
@@ -1017,7 +1308,7 @@ class DocxRenderer:
 
 
 # ----------------------------------------------------------------------------
-def convert(md_path: Path, out_path: Path, opts) -> Path:
+def convert(md_path: Path, out_path: Path, opts, theme: Theme | None = None) -> Path:
     text = md_path.read_text(encoding="utf-8")
     meta, body = parse_frontmatter(text)
     html = md_lib.markdown(body, extensions=["tables", "fenced_code", "sane_lists"])
@@ -1025,7 +1316,7 @@ def convert(md_path: Path, out_path: Path, opts) -> Path:
     walker.feed(html)
     walker.close()
 
-    r = DocxRenderer(meta, md_path, opts)
+    r = DocxRenderer(meta, md_path, opts, theme=theme)
     r.render_cover()
     r.add_body_section()
     if opts.toc:
@@ -1042,6 +1333,11 @@ def main(argv=None):
     ap.add_argument("--pdf", action="store_true", help="also convert to PDF via docx2pdf (needs MS Word)")
     ap.add_argument("--toc", action="store_true", help="insert a Table of Contents field")
     ap.add_argument("--no-numbering", action="store_true", help="do not number H1 sections")
+    ap.add_argument("--style", metavar="ID|PATH",
+                    help="institution style theme: an id under templates/styles/ "
+                         "(goldman_hardline, morganstanley_restrained, jpmorgan_heavyset, "
+                         "barclays_cyanline, bernstein_monochrome, ubs_swissminimal) or a "
+                         "path to a theme .json; default = built-in Wall Street look")
     opts = ap.parse_args(argv)
 
     src = Path(opts.input)
@@ -1050,20 +1346,37 @@ def main(argv=None):
     out = Path(opts.output) if opts.output else src.with_suffix(".docx")
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    convert(src, out, opts)
+    theme = load_theme(opts.style)
+    convert(src, out, opts, theme=theme)
     print(f"[ok] docx written: {out} ({out.stat().st_size:,} bytes)")
+    if opts.style:
+        print(f"[ok] style: {theme.id} ({theme.display_name})")
 
     if opts.pdf:
         pdf = out.with_suffix(".pdf")
-        try:
-            from docx2pdf import convert as d2p
-            d2p(str(out), str(pdf))
-            print(f"[ok] pdf written: {pdf} ({pdf.stat().st_size:,} bytes)")
-        except Exception as e:  # noqa: BLE001
-            print(f"[warn] PDF export failed: {e}\n"
-                  "  Alternatives: (1) open the .docx in Microsoft Word and Save As PDF, "
-                  "(2) install pandoc + a LaTeX engine, or (3) install typst.", file=sys.stderr)
-            return 1
+        # Word/COM conversion is flaky when invoked repeatedly in quick
+        # succession (a stale Word instance can leave the previous file on
+        # disk while the call returns cleanly). Retry a couple of times and
+        # verify freshness instead of trusting the call.
+        import time as _time
+        last_err = None
+        for attempt in (1, 2, 3):
+            try:
+                from docx2pdf import convert as d2p
+                d2p(str(out), str(pdf))
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+            if pdf.exists() and pdf.stat().st_mtime >= out.stat().st_mtime:
+                print(f"[ok] pdf written: {pdf} ({pdf.stat().st_size:,} bytes)")
+                return 0
+            if attempt < 3:
+                _time.sleep(2.0)
+        print(f"[warn] PDF export failed after 3 attempts (last error: {last_err}).\n"
+              "  The .docx is current but the PDF is stale or missing. Re-run, or export "
+              "manually from Word.\n"
+              "  Alternatives: (1) open the .docx in Microsoft Word and Save As PDF, "
+              "(2) install pandoc + a LaTeX engine, or (3) install typst.", file=sys.stderr)
+        return 1
     return 0
 
 

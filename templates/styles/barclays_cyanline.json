@@ -1,0 +1,49 @@
+{
+  "id": "barclays_cyanline",
+  "display_name": "巴克莱（青蓝风） / Cyan Line",
+  "style_en": "Cyan header band, tinted side rail, cyan table header on white text, light headings",
+  "style_zh": "青色页眉带；右侧浅蓝信息栏；青色表头白字；细字重大标题；中高密度",
+  "fonts": {
+    "body": "Arial",
+    "heading": "Arial",
+    "mono": "Consolas"
+  },
+  "colors": {
+    "navy": "6D6E71",
+    "accent": "00AEEF",
+    "text": "333333",
+    "midgray": "58595B",
+    "lightgray": "999999",
+    "rule": "D9D9D9",
+    "table_header_fill": "00AEEF",
+    "table_header_text": "FFFFFF",
+    "table_zebra": null,
+    "rating_box_fill": "F2F6F8"
+  },
+  "layout": {
+    "margin_lr": 0.9,
+    "margin_tb": 0.85,
+    "body_size": 10.0,
+    "h1_size": 22,
+    "h2_size": 13,
+    "h3_size": 11.5,
+    "h1_font": "heading",
+    "line_spacing": 1.2
+  },
+  "tables": {
+    "vertical_rules": false,
+    "zebra": false,
+    "rule_above_header": false,
+    "rule_below_header": true
+  },
+  "rating_box": {
+    "style": "rail",
+    "fill": "F2F6F8",
+    "border": false
+  },
+  "masthead": {
+    "rule_under": true,
+    "uppercase_meta": false
+  },
+  "_disclaimer": "Layout-style reference only. Visual characteristics were extracted from publicly available research reports; all institution names, logos and text marks are removed. Not affiliated with or endorsed by any institution."
+}

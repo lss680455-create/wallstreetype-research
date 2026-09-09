@@ -6,9 +6,12 @@
 > how the pipeline calls them and the **file handoff conventions** between stages.
 > 本文只定义编排：数据/图表/排版/范式模块由其他子代理实现，本流水线通过约定文件路径调用它们。
 
-- Version: 2.0.0
+- Version: 2.1.0
 - Status: design
-- Companion file: [`agent_prompts.md`](agent_prompts.md) — copy-paste-ready bilingual briefs for every role.
+- Companion files:
+  - [`intake.md`](intake.md) — **S0 intake**: layout-template choice + research-focus questionnaire (bilingual).
+  - [`agent_prompts.md`](agent_prompts.md) — copy-paste-ready bilingual briefs for every role.
+  - `../scripts/intake/intake.py` — one-shot CLI that writes `brief/intake.json` (stdlib only).
 - **Agent-agnostic / 代理无关:** this pipeline runs on **any** AI tooling — Claude Code, Codex, Cursor, OpenAI agents,
   open-source models, or a human following the steps manually. No platform-specific hooks, no vendor lock-in.
 
@@ -37,10 +40,15 @@ layout/template engine, research methodology content. The pipeline treats them a
 
 ## 2. How to Run in Any AI Environment / 如何在任意AI环境中运行
 
-The pipeline is a **workflow**, not a program. You drive it in four moves:
+The pipeline is a **workflow**, not a program. You drive it in five moves:
 
-1. **Prepare.** Create a run directory; write `envelope.json` (the input contract, §4) and the six role briefs
-   (§ in `agent_prompts.md`) with placeholders filled in.
+0. **Intake (S0).** Ask the user for the two pre-run answers — **layout template** and **research focus** —
+   and write `brief/intake.json` (follow [`intake.md`](intake.md); or one-shot it with
+   `python scripts/intake/intake.py --template <id> --focus ...`). If the user is unavailable, apply the
+   documented defaults and say so. This stage is never skipped silently.
+1. **Prepare.** Create a run directory; write `envelope.json` (the input contract, §5) and the six role briefs
+   (§ in `agent_prompts.md`) with placeholders filled in. Copy `brief/intake.json` into
+   `{RUN_ROOT}/briefs/intake.json` and wire its values into the envelope.
 2. **Dispatch children.** Copy the relevant brief (plain text) to a child agent for each research role
    (Data Engineer, Industry Analyst, Valuation Analyst). **If your tool supports parallel child agents, start the
    three research roles at the same time.** If not, run them one after another — the artifacts they write are identical
@@ -53,11 +61,11 @@ The pipeline is a **workflow**, not a program. You drive it in four moves:
    report, runs the quality gates, and publishes the final report.
 
 ```
- main agent ── S1 envelope ── S2 briefs ──┬── [child] Data Engineer   ─┐
-                                          ├── [child] Industry Analyst ─┼── parallel (or sequential) ── S5 main-agent adjudication
-                                          └── [child] Valuation Analyst┘        │
-                                   S4 [child] Red Team ────────────────────────┘
-                                   S6 [child] Chart Specialist ─ S7 [child] Layout Specialist ─ S8 main-agent final QA ─ S9 main-agent Proofing & QC (vision proofing gate) ─ deliver
+ main agent ── S0 intake ── S1 envelope ── S2 briefs ──┬── [child] Data Engineer   ─┐
+                                                       ├── [child] Industry Analyst ─┼── parallel (or sequential) ── S5 main-agent adjudication
+                                                       └── [child] Valuation Analyst┘        │
+                                                S4 [child] Red Team ────────────────────────┘
+                                                S6 [child] Chart Specialist ─ S7 [child] Layout Specialist ─ S8 main-agent final QA ─ S9 main-agent Proofing & QC (vision proofing gate) ─ deliver
 ```
 
 **Key principle:** the pipeline's *correctness* depends on the workflow (files + gates), **not** on any specific agent
@@ -90,9 +98,11 @@ The pipeline needs only capabilities nearly every AI agent (and a diligent human
 The pipeline is **run-root relative**. The main agent creates the run at runtime and injects the absolute path as `RUN_ROOT`.
 
 ```
+{workspace}/brief/intake.json         # S0 intake contract (pre-run; written before RUN_ROOT exists)
 {workspace}/runs/{run_id}/            # RUN_ROOT (created by main agent at S1)
-├── envelope.json                     # task contract (input)
+├── envelope.json                     # task contract (input; S0 intake values wired in)
 ├── briefs/                           # master brief + per-role briefs (audit trail)
+│   ├── intake.json                   # copy of the S0 intake — run self-containment
 │   ├── master_brief.md
 │   └── brief_<role>.md               # data_engineer | industry | valuation | redteam | chart | layout
 ├── data/                             # SINGLE WRITER: Data Engineer
@@ -133,6 +143,7 @@ The pipeline is **run-root relative**. The main agent creates the run at runtime
 
 | Module | Invoked by | Reads | Writes |
 |---|---|---|---|
+| Intake module (`scripts/intake/`, `pipeline/intake.md`) | main agent at S0 | — | `brief/intake.json` |
 | Data module (`scripts/data/`) | Data Engineer at S3 | — | `data/*` (convention above) |
 | Chart module (`scripts/charts/`) | Chart Specialist at S6 | `data/*`, `charts/manifest.json` plan | `charts/fig_*.png` |
 | Layout module (`templates/`) | Layout Specialist at S7 | `decisions/decision.json`, `research/*`, `review/*`, `charts/*` | `draft/report_draft.md`, `final/report.*` |
@@ -147,7 +158,8 @@ appended to only by the Data Engineer; new sources discovered by other roles are
 
 ## 5. Input Contract — TaskEnvelope / 输入契约
 
-`envelope.json` is the single input artifact; every brief references it.
+`envelope.json` is the single input artifact; every brief references it. Fields marked **(S0)** are wired
+from `brief/intake.json` (S0); the intake file remains the source of truth for those answers.
 
 ```json
 {
@@ -157,6 +169,10 @@ appended to only by the Data Engineer; new sources discovered by other roles are
   "market": "US",
   "language": "en",
   "depth": "standard",
+  "template_id": "goldman_hardline",
+  "focus_areas": ["valuation", "growth"],
+  "horizon": "medium",
+  "chart_density": "high",
   "currency": "USD",
   "focus_question": "Is Tesla's energy-storage segment a material re-rating driver over 12 months?",
   "constraints": ["no short-term trading calls", "12-month horizon"],
@@ -171,8 +187,12 @@ appended to only by the Data Engineer; new sources discovered by other roles are
 | `ticker` / `company` | yes | primary identifiers |
 | `market` | yes | US / HK / CN / EU / ... — selects data conventions (currency, filing language, data-script behavior) |
 | `language` | yes | `en` (default) / `zh` / `bilingual` — report language; sources may stay in their native language |
-| `depth` | yes | `quick` / `standard` / `deep` — see §11 |
-| `focus_question` | no | optional single question the report must answer |
+| `depth` | yes | `quick` / `standard` / `deep` — see §12; taken from `brief/intake.json` when present |
+| `template_id` **(S0)** | no | layout template id from `brief/intake.json`; passed to S7/S8 as `md_to_docx.py --style <id>` |
+| `focus_areas` **(S0)** | no | research lenses from intake (`valuation` / `growth` / `cyclical` / `event-driven` / `defensive` / `bull-bear`); weights the briefs, the Red Team and the report skeleton |
+| `horizon` **(S0)** | no | `short` / `medium` / `long`; sets the valuation & scenario window |
+| `chart_density` **(S0)** | no | `low` / `standard` / `high`; caps/expands the S6 figure plan |
+| `focus_question` | no | optional single question the report must answer (derive from `focus_areas` if absent) |
 | `budget` | yes | filled from depth-tier defaults; the main agent may tighten for cost control |
 
 ---
@@ -192,13 +212,14 @@ appended to only by the Data Engineer; new sources discovered by other roles are
 | 7 | **Layout Specialist** 排版师 | **Structure & readability**: a report a human can actually read | assembly, section order, typography, citations formatting, format conversion | content edits beyond mechanical fixes, new opinions |
 | 8 | **Proofreader** 校对员 (S9, optional assistant) | **Compliance & polish**: does the report survive the quality gate | G7 checklist execution: vision-model proofing on per-page renders, number-reference-table cross-check | new analysis content, rewriting prose, changing numbers — the proofreader VERIFIES, never edits content |
 
-Roles 1–4 and 6–7 are **leaf child agents** (8 is an optional S9 assistant, still a leaf). The main agent (Editor, role 5) is the only orchestrator and adjudicator.
+Roles 1–4 and 6–7 are **leaf child agents** (8 is an optional S9 assistant, still a leaf). The main agent (Editor, role 5) is the only orchestrator and adjudicator. The main agent also runs **S0 Intake** — it asks the user the template + focus questions and writes `brief/intake.json`; this stage is **never delegated**.
 
 ---
 
 ## 7. Pipeline Overview / 流水线总览
 
 ```
+ S0  Intake                  ─ main agent                → brief/intake.json (template + focus)
  S1  Input & Envelope        ─ main agent                → envelope.json, run dir
  S2  Master Brief            ─ main agent                → briefs/*.md
  S3  Parallel Research       ─ 3 leaf children, one batch→ data/*, research/*, claims_*.json
@@ -210,7 +231,7 @@ Roles 1–4 and 6–7 are **leaf child agents** (8 is an optional S9 assistant, 
  S9  Proofing & QC           ─ main agent (主编) + vision model → proof/* (visual proofing checklist) — QUALITY GATE G7
 ```
 
-**9 stages, up to 4 dispatch waves** (all other work is done by the main agent):
+**10 stages (S0–S9), up to 4 dispatch waves** (all other work is done by the main agent; S0–S2 add no dispatch):
 
 | Wave | Stage(s) | Dispatch | Parallelism |
 |---|---|---|---|
@@ -228,18 +249,44 @@ the workflow is unaffected.
 
 ## 8. Stage Specifications / 阶段规格
 
+### S0 — Intake 任务前意向采集
+- **Who:** main agent, **interactive with the user — never delegated**.
+- **Input:** user preferences (or the documented defaults if the user is unavailable).
+- **Procedure** (full text: [`intake.md`](intake.md)):
+  1. **Template choice** — present the six style-only layout templates (`templates/styles/*.json`), one-line style
+     + best-fit for each; the user picks one (mix / custom layout allowed — record the base id and describe the
+     override in `special_requests`). List them with `python scripts/intake/intake.py --list`.
+  2. **Focus questionnaire** — research focus (multi-select), horizon, depth, language, chart density,
+     special requests (ESG / technicals / policy / peer comparison / ...). Every item has options and a default.
+- **Output:** `brief/intake.json` (repo-level intake area) — fixed field set:
+  `template_id`, `template_display_name`, `focus_areas[]`, `horizon`, `depth`, `language`, `chart_density`,
+  `special_requests[]`, `created_at`. Write it by hand or run
+  `python scripts/intake/intake.py --template <id> --focus valuation,growth --horizon medium --depth full --language en --charts high --notes "..."`.
+- **Quality gate G0:** all nine fields present and valid (`template_id` ∈ the six template ids; `focus_areas`
+  non-empty and within the allowed set; `horizon ∈ {short, medium, long}`; `depth ∈ {quick, standard, deep}`;
+  `language ∈ {en, bilingual, zh}`; `chart_density ∈ {low, standard, high}`; `created_at` ISO-8601); the answers
+  are echoed back to the user; any default applied is explicitly declared.
+  **Fail →** ask once more for the missing/invalid item; still unavailable → apply defaults and disclose.
+- **Injection:** `template_id` → S7/S8 `--style`; `focus_areas` → S2 brief lens weights + S4 Red Team priorities
+  + S5 skeleton order; `horizon` → valuation/scenario window; `depth` → stage trimming (§12); `language` →
+  envelope + all writing/chart labels; `chart_density` → S6 figure plan; `special_requests` → briefs, question
+  bank, sections, disclosures. Full mapping: `intake.md` §6.
+
 ### S1 — Input & Envelope 输入与任务信封
 - **Who:** main agent.
-- **Input:** user request (ticker/market/language/depth/focus) — parsed, defaults applied (`language=en`, `depth=standard`).
-- **Output:** `{RUN_ROOT}/envelope.json`; creates `{RUN_ROOT}/` and subdirectories.
-- **Quality gate G0:** envelope validates (required fields present; `depth ∈ {quick, standard, deep}`; `language ∈ {en, zh, bilingual}`; budget fields filled).
+- **Input:** user request (ticker/market/language/depth/focus) + `brief/intake.json` — parsed, defaults applied
+  (`language=en`, `depth=standard`; intake values override where present); copy the intake file into
+  `{RUN_ROOT}/briefs/intake.json`.
+- **Output:** `{RUN_ROOT}/envelope.json` with `template_id`, `focus_areas`, `horizon`, `chart_density`,
+  `language`, `depth` wired in; creates `{RUN_ROOT}/` and subdirectories.
+- **Quality gate G0b:** envelope validates (required fields present; `depth ∈ {quick, standard, deep}`; `language ∈ {en, zh, bilingual}`; budget fields filled; intake-derived fields consistent with `brief/intake.json`).
 
 ### S2 — Master Brief 简报
 - **Who:** main agent.
 - **Input:** `envelope.json`; brief templates from this repo (`agent_prompts.md`).
 - **Output:** `briefs/master_brief.md` + `briefs/brief_<role>.md` for all 6 child roles — every placeholder
   (`{{run_root}}`, `{{ticker}}`, ...) resolved to concrete values.
-- **Quality gate G0b:** every role brief exists and contains: role + lens, input paths, output path, quality checklist,
+- **Quality gate G0c:** every role brief exists and contains: role + lens, input paths, output path, quality checklist,
   budget/rounds, language. A brief missing its checklist is a defect — fix before dispatching.
 
 ### S3 — Parallel Research 并行研究
@@ -342,8 +389,9 @@ the workflow is unaffected.
   - `proof/visual_proofing.md` — per-page visual checklist (page × check item × PASS/FAIL), see below.
   - `proof/pages/page_*.png` — PDF rendered page by page (pymupdf: `python -c "import pymupdf; ... get_pixmap(dpi=144) ..."`; any renderer a vision-capable model can read works).
 - **Steps:**
-  1. **Render.** Render `final/report.pdf` (or the docx) page by page to `proof/pages/page_NN.png`. **Re-render after ANY change to the artifacts — a stale render passes a false gate** (an old PNG can look clean while the current PDF is broken).
+  1. **Render.** Render `final/report.pdf` (or the docx) page by page to `proof/pages/page_NN.png`. **Re-render after ANY change to the artifacts — a stale render passes a false gate** (an old PNG can look clean while the current PDF is broken). **Trust freshness, not the exporter:** Word/COM PDF export can fail silently and leave an OLD pdf in place — verify `PDF mtime ≥ docx mtime` before rendering (`templates/md_to_docx.py` now retries and refuses to report success on a stale file). **Render at ≥144 DPI:** thin serif strokes, dark table headers on white text and pale zebra fills are unreadable below that and generate false findings.
   2. **Vision proofing — this IS the gate.** **A model with VISION input must inspect every page** against the checklist below — judgment on layout from text alone is FORBIDDEN (agent-agnostic: any vision-capable model, multimodal CLI, or a human reviewer passes; a text-only model must pass the PNGs to one). The vision reviewer holds `data/numbers.json` (数字引用表) as the cross-check reference and verifies every core number printed on a page against its registered value. Record a per-page table: 页号 × 检查项 × PASS/FAIL in `proof/visual_proofing.md`. **Any page FAIL → back to S7 (Layout Specialist) to re-typeset, then re-render and re-proof.**
+  3. **Zoom before you judge (疑点先放大复核).** Any suspected defect on a page must be re-checked on a ≥2x cropped zoom before it is recorded. At thumbnail resolution a black header with white text reads as "white background", a pale zebra fill reads as "missing", and `Fiscal` reads as `Fical` — three false findings in one pass on this project. Record only what survives the zoom.
   3. **Proofreading pass (reading, still no content edits):** citations resolve, language consistency, no duplicated sections, no orphaned captions/headings.
 - **Quality gate G7 — 视觉校对单 (all items must PASS):**
   - [ ] every page inspected by a vision-capable model; cover rating box (评级框) / analyst block (分析师块) / key-data price block rendered
@@ -378,6 +426,9 @@ SUBJECT: <run_id> — <role>
 Dispatch order:
 
 ```
+S0  main agent intake: template + focus questionnaire → brief/intake.json → G0 check
+S1  main agent writes envelope.json (intake values wired in) → G0b
+S2  main agent writes briefs (intake answers injected) → G0c
 W1  start Data Engineer + Industry Analyst + Valuation Analyst (one batch, or sequential fallback)
     → wait for all → G1 check → optional narrow revise
 W2  start Red Team (skip if depth=quick) → wait → G2 check
@@ -412,6 +463,24 @@ S9  main agent Proofing & QC: render pages → vision proofing (per-page checkli
 ## 10. Artifact Schemas / 结构化工件
 
 All JSON artifacts validate against these shapes (JSON Schema files ship with the repo under `skill/schemas/`).
+
+### intake (IntakeArtifact) — written by the main agent at S0 (from user answers)
+
+```json
+{
+  "template_id": "goldman_hardline",
+  "template_display_name": "高盛（硬朗风） / Hardline",
+  "focus_areas": ["valuation", "growth"],
+  "horizon": "medium",
+  "depth": "deep",
+  "language": "en",
+  "chart_density": "high",
+  "special_requests": ["focus on FCF inflection and buyback capacity"],
+  "created_at": "2026-09-10T05:23:30+08:00"
+}
+```
+- Produced by `scripts/intake/intake.py` or hand-written per [`intake.md`](intake.md); copied into
+  `{RUN_ROOT}/briefs/intake.json` at S1; consumed by every later stage per the injection table.
 
 ### claim (ClaimArtifact) — written by analysts
 
@@ -493,7 +562,7 @@ All JSON artifacts validate against these shapes (JSON Schema files ship with th
 
 | | `quick` | `standard` | `deep` |
 |---|---|---|---|
-| Stages | S1, S2, S3, S5, S7, S8, S9 (vision proofing; cover + first page spot-check) | S1–S9 | S1–S9 |
+| Stages | S0, S1, S2, S3, S5, S7, S8, S9 (vision proofing; cover + first page spot-check) | S0–S9 | S0–S9 |
 | Red team | main-agent inline red-flag scan | 1 child round | 2 rounds (2nd round forces **new factors** — anti-groupthink) |
 | Charts | none | ≥ 3 core figures | full figure set |
 | Revise rounds | 0 | 1 per gate | 2 per gate |
@@ -503,12 +572,21 @@ All JSON artifacts validate against these shapes (JSON Schema files ship with th
 | Approx. time | 10–20 min | 45–75 min | 2–4 h |
 | Use case | screening, quick sanity | standard research note | deep-dive / portfolio-grade |
 
+**S0 intake may override the tier and the figure count:** `brief/intake.json.depth` is authoritative for stage
+trimming, and `chart_density` sets the figure plan inside the tier (`low` 1–2, `standard` 3–5, `high` full set).
+The envelope records both; a change mid-run must update `brief/intake.json` and be disclosed.
+
 ---
 
 ## 13. Main-Agent Operating Protocol / 主代理操作规程
 
-1. **Parse input → S1.** Build `envelope.json`; create run dirs. Validate G0.
-2. **S2.** Fill all 6 role briefs from templates (`agent_prompts.md`); resolve `{{...}}`; write `briefs/`. Validate G0b.
+0. **S0.** Ask the template + focus questions per [`intake.md`](intake.md); write `brief/intake.json`;
+   validate **G0**. Never delegate this stage.
+1. **Parse input → S1.** Build `envelope.json` (wire in intake values); create run dirs; copy the intake file
+   into `briefs/`. Validate **G0b**.
+2. **S2.** Fill all 6 role briefs from templates (`agent_prompts.md`) — inject the intake answers (lens
+   weights, horizon, language, chart density, special requests); resolve `{{...}}`; write `briefs/`.
+   Validate **G0c**.
 3. **S3.** Dispatch 3 research children (one batch, or sequential). On return, run G1. If a role failed → one narrow
    re-dispatch ("complete items X only"). Degrade if needed.
 4. **S4.** If depth ≠ quick: dispatch Red Team. Run G2.
@@ -524,6 +602,7 @@ All JSON artifacts validate against these shapes (JSON Schema files ship with th
    **Gate G7** (all green) before delivery; any red → narrow fix (usually back to S7) → re-render and re-proof.
 
 **Main-agent discipline (never violated):**
+- S0 答案（模板/侧重/期限/深度/语言/图表密度）一经确认即注入全链，不得中途静默更改；变更须更新 `brief/intake.json` 并披露。
 - 主代理绝不凭整体印象裁决——先读齐所有 artifacts，逐 claim 裁决。
 - 强制保留 minority report（共识也可能是共同错误）。
 - 不无限加轮次：预算在 envelope，超预算即降级交付并披露。
@@ -538,6 +617,7 @@ All JSON artifacts validate against these shapes (JSON Schema files ship with th
 - **No platform hooks:** no `delegate_task`, no skill mechanism, no vendor CLI, no MCP servers, no proprietary APIs.
   Execution is: copy briefs → children read/write files → run stdlib-Python scripts for mechanical work.
 - **Mechanical work = Python stdlib (cross-platform):**
+  - `scripts/intake/intake.py` — S0 intake (`--list` templates; write `brief/intake.json`; no third-party deps).
   - `scripts/data/data_fetcher.py` — unified data acquisition (quotes/history/financials for US & CN; `--json` for structured output).
   - `scripts/charts/report_charts.py` — render research-style figures (kline / PE band / financials / scenario / peer comparison → PNG).
   - `templates/md_to_docx.py` — assemble the Markdown master → Word `.docx` (and PDF via `--pdf`, requires MS Word + docx2pdf).
@@ -546,7 +626,7 @@ All JSON artifacts validate against these shapes (JSON Schema files ship with th
 - **No machine-specific paths anywhere:** briefs contain only `RUN_ROOT`-relative conventions
   (`runs/{run_id}/...`); `RUN_ROOT` is injected at runtime.
 - **Installation for a clone:**
-  1. This repo already ships `pipeline/` (orchestration + briefs), `scripts/` (data/charts) and `templates/` (layout) — keep the tree intact; all internal references are relative.
+  1. This repo already ships `pipeline/` (intake + orchestration + briefs), `scripts/` (intake/data/charts) and `templates/` (layout + styles) — keep the tree intact; all internal references are relative.
   2. `SKILL.md` frontmatter references them; the skill body's "Run pipeline" section points at this design doc.
   3. Optional: give your main agent the 3 child-brief files and this doc — nothing else to configure.
 - **Language:** reports default to English; `language=zh|bilingual` switches the layout language and brief language

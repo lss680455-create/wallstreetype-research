@@ -1,0 +1,49 @@
+{
+  "id": "goldman_hardline",
+  "display_name": "高盛（硬朗风） / Hardline",
+  "style_en": "Open grid, serif masthead, navy accents, hairline rules, high density",
+  "style_zh": "开放式无框版式；衬线大标题+无衬线正文；深蓝强调；水平细线分区；高信息密度",
+  "fonts": {
+    "body": "Arial",
+    "heading": "Georgia",
+    "mono": "Consolas"
+  },
+  "colors": {
+    "navy": "0B2545",
+    "accent": "1F4E8C",
+    "text": "333333",
+    "midgray": "595959",
+    "lightgray": "8A8A8A",
+    "rule": "CCCCCC",
+    "table_header_fill": "E6E6E6",
+    "table_header_text": "000000",
+    "table_zebra": null,
+    "rating_box_fill": "F2F4F8"
+  },
+  "layout": {
+    "margin_lr": 0.95,
+    "margin_tb": 0.85,
+    "body_size": 10.0,
+    "h1_size": 20,
+    "h2_size": 13,
+    "h3_size": 11.5,
+    "h1_font": "heading",
+    "line_spacing": 1.12
+  },
+  "tables": {
+    "vertical_rules": false,
+    "zebra": false,
+    "rule_above_header": true,
+    "rule_below_header": true
+  },
+  "rating_box": {
+    "style": "open",
+    "fill": "F2F4F8",
+    "border": false
+  },
+  "masthead": {
+    "rule_under": true,
+    "uppercase_meta": true
+  },
+  "_disclaimer": "Layout-style reference only. Visual characteristics were extracted from publicly available research reports; all institution names, logos and text marks are removed. Not affiliated with or endorsed by any institution."
+}

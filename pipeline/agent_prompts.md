@@ -730,7 +730,7 @@ INPUTS (read-only):
 
 STEPS (vision proofing IS the gate — layout must NEVER be judged from text alone):
 1. RENDER: render final/report.pdf (or the docx via Word) page by page to proof/pages/page_NN.png
-   (pymupdf: get_pixmap(dpi=144)). Re-render after ANY artifact change — stale renders pass false gates.
+   (pymupdf: get_pixmap(dpi=144)). Re-render after ANY artifact change — stale renders pass false gates. Render at ≥144 DPI and zoom ≥2x on any suspected defect before recording it (low-res thumbnails produce false findings); verify the PDF is newer than the docx (Word COM can fail silently).
 2. VISION PROOFING: a model WITH VISION input must inspect EVERY page (cover, tables, exhibits,
    appendix). You may use any vision-capable model / tool / human reviewer — this is agent-agnostic
    by design. A text-only model must hand the PNGs to a vision-capable one; judging layout from
@@ -774,7 +774,7 @@ BUDGET: ~{{approx_minutes}} min (rendering + per-page vision passes dominate).
 
 步骤（视觉校对即质量门——版式绝不允许仅凭文本判断）：
 1. 渲染：把 final/report.pdf（或经 Word 转换的 docx）逐页渲染到 proof/pages/page_NN.png
-   （pymupdf: get_pixmap(dpi=144)）。成品任何改动后必须重新渲染——过期渲染会放过假通过。
+   （pymupdf: get_pixmap(dpi=144)）。成品任何改动后必须重新渲染——过期渲染会放过假通过。 渲染 ≥144 DPI；任何疑点必须裁剪放大 ≥2x 再判定（低分辨率缩略图会产生误报）；先校验 PDF 比 docx 新（Word COM 会静默失败）。
 2. 视觉校对：必须由【支持视觉输入的模型】逐页检查（封面、表格、图表、附录）。任何视觉能力
    模型/工具/人工审核均可——本设计代理无关。纯文本模型必须把 PNG 交给视觉模型；
    仅凭文本判断版式 = 违规（门禁视为失败）。

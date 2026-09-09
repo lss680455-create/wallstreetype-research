@@ -19,3 +19,7 @@ research/raw/
 
 # Sample conversion outputs ARE committed so the repo shows finished artifacts
 # (regenerate any time with templates/md_to_docx.py; see README "Quick start")
+
+# Local style-reference downloads (copyrighted research PDFs — never commit; see templates/styles/SOURCES.md)
+_refs/
+_tmp_*.json

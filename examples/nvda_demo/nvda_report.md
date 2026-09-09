@@ -68,7 +68,7 @@ We initiate coverage of **NVIDIA Corporation (NVDA, NASDAQ)** with an **OVERWEIG
 
 Source: Yahoo Finance income statement history (company filings); y/y and margins computed by Wall Street Research.
 
-# Stance — What We Ask the Market to Reconsider
+# Stance — What the Market Misses
 
 Two beliefs. First, that NVDA's forward discount to AI-semiconductor peers signals cycle-peak risk; we argue it compensates scale and beta (2.22) that the earnings path no longer justifies — +105.9% revenue growth, +127.8% earnings growth, 117% ROE (Yahoo Finance, financialData). Second, that "expensive" is the trailing multiple; the operative number is 14.4x forward (Yahoo Finance, quote) — the market pays for earnings it already sees. Identification ≠ timing: we do not argue the capex cycle never turns — within 12 months the earnings path dominates, and consensus brackets the outcome at $180 (−20%) to $515 (+130%) (Yahoo Finance, financialData). Failure thresholds are pre-committed below.
 

@@ -10,6 +10,11 @@
 #      report prose. Any {{FIELD}} inside the body text is auto-filled from
 #      the frontmatter above (e.g. {{target_price}} prints $78.00).
 #   3. Convert:  python md_to_docx.py my_report.md --pdf
+#      Optional: add --style <theme-id> to render with one of the six
+#      anonymised layout themes in templates/styles/ (see that folder's
+#      README for the catalogue and picking guide). Omit --style for the
+#      default house look. The theme chosen during intake (see
+#      pipeline/intake.md) is passed here as --style.
 #   4. English is the default; Chinese is fully supported in body text.
 # ============================================================================
 

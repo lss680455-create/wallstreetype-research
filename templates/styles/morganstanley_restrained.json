@@ -1,0 +1,49 @@
+{
+  "id": "morganstanley_restrained",
+  "display_name": "摩根士丹利（克制风） / Restrained",
+  "style_en": "Airy single column, light-weight sans masthead, one blue accent, wide margins",
+  "style_zh": "大留白单栏；轻字重大标题；单一蓝色点缀；宽边距；低密度封面感",
+  "fonts": {
+    "body": "Arial",
+    "heading": "Arial",
+    "mono": "Consolas"
+  },
+  "colors": {
+    "navy": "111111",
+    "accent": "0072CE",
+    "text": "333333",
+    "midgray": "666666",
+    "lightgray": "999999",
+    "rule": "D9D9D9",
+    "table_header_fill": "F2F2F2",
+    "table_header_text": "111111",
+    "table_zebra": null,
+    "rating_box_fill": "F7FAFD"
+  },
+  "layout": {
+    "margin_lr": 1.2,
+    "margin_tb": 1.0,
+    "body_size": 10.5,
+    "h1_size": 24,
+    "h2_size": 13,
+    "h3_size": 11.5,
+    "h1_font": "heading",
+    "line_spacing": 1.35
+  },
+  "tables": {
+    "vertical_rules": false,
+    "zebra": false,
+    "rule_above_header": false,
+    "rule_below_header": true
+  },
+  "rating_box": {
+    "style": "open",
+    "fill": "F7FAFD",
+    "border": false
+  },
+  "masthead": {
+    "rule_under": false,
+    "uppercase_meta": false
+  },
+  "_disclaimer": "Layout-style reference only. Visual characteristics were extracted from publicly available research reports; all institution names, logos and text marks are removed. Not affiliated with or endorsed by any institution."
+}

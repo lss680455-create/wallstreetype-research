@@ -2,8 +2,9 @@
 name: wallstreet-research
 description: >
   Use when 需要生成华尔街风格股票研报/深度投研报告/投资研究流水线。
-  Full-chain, agent-agnostic equity research: 100-report-derived paradigm manual,
-  multi-agent pipeline briefs (EN+ZH), dual-market real data scripts (US Yahoo / CN Tencent-Eastmoney),
+  Full-chain, agent-agnostic equity research: S0 task intake (layout template + focus questionnaire),
+  100-report-derived paradigm manual, multi-agent pipeline briefs (EN+ZH),
+  dual-market real data scripts (US Yahoo / CN Tencent-Eastmoney),
   institutional charts, Wall Street docx/PDF layout. Works with any AI tool or manually.
 version: 1.0.0
 author: Wall Street Research contributors
@@ -27,7 +28,10 @@ metadata:
 | 范式手册 | `methodology/wallstreet_paradigm_manual.md` | 7章：论证骨架/方法总库/行文范式/图表规范/证据纪律/红旗清单/红队质询库 |
 | 100篇清单 | `methodology/report_list_100.md` | 可溯源的方法论种子库 |
 | 组凝练 | `methodology/digests/group1..10.md` | 每篇五维凝练（方法/行文/图表/动作/教训） |
-| 流水线设计 | `pipeline/pipeline_orchestration.md` | 8阶段全链路（envelope→简报→并行研究→红队→仲裁→图表→排版→交付） |
+| 流水线设计 | `pipeline/pipeline_orchestration.md` | S0–S9 全链路（intake→envelope→简报→并行研究→红队→仲裁→图表→排版→交付→视觉质检） |
+| S0 意向采集 | `pipeline/intake.md` | 任务前交互层：模板选择 + 侧重方向问卷（中英双语，agent 无关） |
+| 模板目录 | `templates/styles/` | 六套版式模板 JSON（硬朗/克制/厚重/青蓝/黑白/极简）+ README 目录、schema 与免责声明 |
+| Intake CLI | `scripts/intake/intake.py` | `--list` 列模板；一行命令写 `brief/intake.json`（纯标准库、无第三方依赖） |
 | 角色brief | `pipeline/agent_prompts.md` | 6角色 × 中英双语 直接复制的 prompt，含质量门 |
 | 数据层 | `scripts/data/` | 美股 Yahoo / A股 腾讯+东财，纯 requests，`python data_fetcher.py <us|cn> <代码> <quote|history|financials|all>` |
 | 图表层 | `scripts/charts/` | 五类机构图表（K线+量+MACD / PE band / 财务趋势 / 情景 / 同业对比），500dpi，中文自动字体 |
@@ -38,18 +42,25 @@ metadata:
 
 ```bash
 pip install -r requirements.txt
+python scripts/intake/intake.py --list                     # S0：列出六套版式模板
+python scripts/intake/intake.py --template goldman_hardline --focus valuation,growth \
+    --horizon medium --depth full --language en --charts high   # S0：写 brief/intake.json
 python scripts/data/data_fetcher.py us NVDA all --json     # 取数
 python scripts/charts/report_charts.py                      # 出图（样例入 sample_pngs/）
-python templates/md_to_docx.py examples/layout_demo/example_report.md -o report.docx --pdf  # 排版
+python templates/md_to_docx.py examples/layout_demo/example_report.md -o report.docx --pdf --style goldman_hardline  # 排版（--style 取 intake 的 template_id）
 ```
 
 ## 跑一条完整研报流水线
 
-1. 选深度档位：`quick`（无图1页）/ `standard` / `deep`（全链）。
-2. 主 agent 按 `pipeline/pipeline_orchestration.md` 的 8 阶段驱动；每个子角色 brief 在
+1. **S0 Intake**：按 `pipeline/intake.md` 先让用户选版式模板（六套之一，可混搭）并回答侧重方向问卷
+   （研究侧重/期限/深度/语言/图表密度/特殊要求），落盘 `brief/intake.json`（或直接跑
+   `python scripts/intake/intake.py ...`）；答案注入后续研究与写作。
+2. 选深度档位：`quick`（无图1页）/ `standard` / `deep`（全链）——默认取 intake 的 `depth`。
+3. 主 agent 按 `pipeline/pipeline_orchestration.md` 的 S0–S9 阶段驱动；每个子角色 brief 在
    `pipeline/agent_prompts.md`（中英双语，直接复制）。
-3. 机械工作（取数/绘图/排版）交给 `scripts/` 与 `templates/` 的独立 Python 脚本——agent 不手打数据。
-4. 主编仲裁必须保留 minority report；红队结论写进风险章节；每张图带 Exhibit 编号与来源脚注。
+4. 机械工作（取数/绘图/排版）交给 `scripts/` 与 `templates/` 的独立 Python 脚本——agent 不手打数据；
+   排版用 `--style <intake.template_id>`。
+5. 主编仲裁必须保留 minority report；红队结论写进风险章节；每张图带 Exhibit 编号与来源脚注。
 
 ## 关键纪律（来自范式手册，写进每个 brief）
 

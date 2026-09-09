@@ -1,0 +1,49 @@
+{
+  "id": "bernstein_monochrome",
+  "display_name": "伯恩斯坦（学术黑白风） / Monochrome",
+  "style_en": "Strict black-and-white, black masthead bar, serif body, dense grid, no color",
+  "style_zh": "纯黑白；黑色顶栏；衬线正文；紧凑网格；无彩色元素；学术气质",
+  "fonts": {
+    "body": "Georgia",
+    "heading": "Arial",
+    "mono": "Consolas"
+  },
+  "colors": {
+    "navy": "000000",
+    "accent": "000000",
+    "text": "111111",
+    "midgray": "333333",
+    "lightgray": "666666",
+    "rule": "333333",
+    "table_header_fill": "000000",
+    "table_header_text": "FFFFFF",
+    "table_zebra": null,
+    "rating_box_fill": "F2F2F2"
+  },
+  "layout": {
+    "margin_lr": 1.0,
+    "margin_tb": 0.8,
+    "body_size": 10.0,
+    "h1_size": 18,
+    "h2_size": 12,
+    "h3_size": 11,
+    "h1_font": "heading",
+    "line_spacing": 1.25
+  },
+  "tables": {
+    "vertical_rules": false,
+    "zebra": false,
+    "rule_above_header": true,
+    "rule_below_header": true
+  },
+  "rating_box": {
+    "style": "band",
+    "fill": "F2F2F2",
+    "border": true
+  },
+  "masthead": {
+    "rule_under": true,
+    "uppercase_meta": true
+  },
+  "_disclaimer": "Layout-style reference only. Visual characteristics were extracted from publicly available research reports; all institution names, logos and text marks are removed. Not affiliated with or endorsed by any institution."
+}
