@@ -2,7 +2,7 @@
 
 # wallstreetype-research
 
-**Turning a dinner-table joke into an auditable pipeline.**
+**Treating equity research like a software pipeline.**
 
 ### *You can work for Wall Street.*
 
@@ -10,296 +10,259 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![API keys](https://img.shields.io/badge/API%20keys-none-brightgreen)
 ![Markets](https://img.shields.io/badge/markets-US%20%7C%20A--share-orange)
-![Layout styles](https://img.shields.io/badge/layout%20styles-6-9cf)
-![Agents](https://img.shields.io/badge/works%20with-any%20agent%20%7C%20a%20human-black)
+![Styles](https://img.shields.io/badge/layout%20styles-6-9cf)
+![Charts](https://img.shields.io/badge/chart%20families-5-purple)
+![Pipeline](https://img.shields.io/badge/pipeline-S0--S9-black)
+![Agent](https://img.shields.io/badge/works%20with-any%20AI%20agent%20%7C%20human-lightgrey)
 
-[中文](README.md) · [English](README_EN.md) · [Paradigm manual](methodology/wallstreet_paradigm_manual.md) · [Case PDF](examples/unitree_vs_nvidia/unitree_vs_nvidia.pdf)
+[English](README_EN.md) · [**中文**](README.md) · [Quick start](#quick-start-four-steps-to-a-finished-report) · [Architecture](#architecture) · [Showcase](#showcase-what-the-output-looks-like)
 
 </div>
 
 ---
 
-## 0. The 30-second version
+## What this is
 
-`wallstreetype-research` is a **self-contained, agent-agnostic** equity-research pipeline.
+An open-source toolkit that turns **sell-side research production into engineering**: an input contract, role separation, quality gates, and delivery specs — all as runnable scripts and documents.
 
-> **Input**: ticker + market + language + depth + layout template
-> **Output**: a sell-side-grade research report (Markdown → Word / PDF, 500-dpi charts)
+It doesn't teach you how to read a balance sheet. It hands you a **pipeline** — fetch real data, compute the metrics, draw institutional-grade charts, apply an anonymised sell-side layout, export a Word / PDF with cover page and rating box. Every number in a report traces back to a real data fetch.
 
-The methodology comes from **100 real sell-side reports**, condensed five ways each
-(10 groups × 10 reports → one 7-chapter paradigm manual).
-The numbers come from **real dual-market endpoints** (Yahoo Finance for US, Tencent + Eastmoney for A-shares),
-with **no API key required**.
-The charts are **institutional-style** (5 families). The layout is **sell-side** (6 anonymised templates).
+> **One line**: other people hand you a research report. This hands you a research-report machine. Install it, run it, ship it.
 
-This is not "let an AI write a report." It is "**break research down into 10 stages and 8 roles, and make someone own every cell**."
+---
+
+## Features
+
+Five layers, organised as *where the research comes from → what it looks like → who does what → how it ships*. Each works standalone; together they run end to end.
+
+| # | Module | Path / entry point | What you get |
+|---|---|---|---|
+| 1 | **Methodology library** | `methodology/` | A teardown list of 100 real sell-side reports + 10 thematic digests + a 550-line *Wall Street Paradigm Manual* — research logic, evidence discipline, red flags |
+| 2 | **Dual-market data layer** | `scripts/data/data_fetcher.py` | US + A-share quotes / daily bars / financials in one command, **no API key** |
+| 3 | **Institutional chart layer** | `scripts/charts/report_charts.py` | 5 report-ready chart families: K-line + volume, valuation band, financial trend, scenario bars, peer comparison |
+| 4 | **Layout & delivery layer** | `templates/` | 6 anonymised sell-side layouts + a Markdown → Word / PDF engine (cover, rating box, Key Data, numbering, TOC, embedded charts) |
+| 5 | **Research pipeline** | `pipeline/` | 10 stages (S0–S9), 8 roles, quality gates, structured hand-off artifacts — writing a report becomes a reproducible line |
+
+**Plus one more**: `VERIFICATION.md` — a verifiable action for every claim, including the final gate: render the finished document and let a vision model nitpick it page by page.
+
+---
+
+## Quick start: four steps to a finished report
 
 ```bash
-git clone https://github.com/lss680455-create/wallstreetype-research.git
-cd wallstreetype-research && pip install -r requirements.txt
+# 0. Dependencies (pandas / matplotlib / python-docx / mplfinance, ...)
+pip install -r requirements.txt
 
-# fetch real data → chart it → render Word/PDF
-python scripts/data/data_fetcher.py cn 688836 all --json
-python templates/md_to_docx.py examples/unitree_vs_nvidia/unitree_vs_nvidia.md --pdf --style goldman_hardline
+# 1. Fetch: A-share / US, quote / history / financials
+python scripts/data/data_fetcher.py cn 600519 all --json        # Kweichow Moutai, full set
+python scripts/data/data_fetcher.py us NVDA financials --json   # NVIDIA, financials
+export YAHOO_PROXY=socks5h://127.0.0.1:10808                    # proxy for US data if needed
+
+# 2. Write: copy the skeleton, fill in your content (YAML front matter drives
+#    the cover page and the rating box)
+cp templates/report_template.md my_report.md
+
+# 3. Chart: five families, one call
+python scripts/charts/report_charts.py          # writes every sample to scripts/charts/sample_pngs/
+
+# 4. Ship: Markdown → Word (+ PDF), pick a layout
+python templates/md_to_docx.py my_report.md --style goldman_hardline --pdf --toc
+```
+
+**Switching layout is a single flag:**
+
+```bash
+python templates/md_to_docx.py my_report.md --style barclays_cyanline    --pdf
+python templates/md_to_docx.py my_report.md --style bernstein_monochrome --pdf
+python templates/md_to_docx.py my_report.md --style ubs_swissminimal     --pdf
+python templates/md_to_docx.py my_report.md --style /path/to/your_own.json --pdf
+```
+
+Layouts aren't hard-coded: `templates/styles/*.json` defines fonts, colours, layout, tables, rating box and masthead. Copy one, edit it, and you have a new template.
+
+**Want the whole pipeline autonomous?** Hand it to any AI agent (or to yourself):
+
+```text
+Read pipeline/pipeline_orchestration.md and produce a deep-dive research
+report on <company> following stages S0–S9. Use the ubs_swissminimal layout
+and scripts/data/ for dual-market data. Write every stage artifact into the
+workspace; redo the stage if a gate fails.
 ```
 
 ---
 
-## 1. Why this exists
+## Architecture
 
-Someone asked: **Can Unitree Robotics surpass NVIDIA?**
+### The ten-stage pipeline (S0–S9)
 
-It is a question that genuinely gets asked at dinner tables, in group chats, and on some sell-side morning calls.
-It sounds exciting. It is also **undefined** — like asking whether a robot dog that just learned a backflip can beat an army.
+```text
+  S0 Intake               topic + layout questionnaire   ── editor ──▶ brief/intake.json
+  S1 Input & Envelope     freeze the input contract      ── editor ──▶ envelope.json
+  S2 Master Brief         write the master brief         ── editor ──▶ briefs/master_brief.md
+  S3 Parallel Research    three parallel workstreams     ── 3 children ──▶ data / industry / valuation
+  S4 Red Team Challenge   attack your own thesis         ── 1 child ──▶ review/redteam.md
+  S5 Adjudication         editor rules on the dispute    ── editor ──▶ decisions/decision.json
+  S6 Charting             build the exhibits             ── 1 child ──▶ charts/manifest.json
+  S7 Layout & Assembly    assemble the document          ── 1 child ──▶ draft/report_draft.md
+  S8 Final Review         sign-off                       ── editor ──▶ final/report.md
+  S9 Proofing & QC        proofread + visual QC          ── editor + vision model ──▶ proof/visual_proofing.md
 
-To answer it, you first have to say **which ruler you are using**.
+  Gates G0 · G0b · G0c · G1 · G2 · G3 · G4 · G5 · G7    ← fail the gate, redo the stage
+```
 
-And "deciding which ruler, finding the number for every ruler, and writing the conclusion in a format someone else can audit" — **that is the craft of Wall Street.**
+Three depth tiers (quick note / standard single-company / deep thematic) trim the same pipeline — you don't run all of it every time.
 
-So this project takes that craft apart, lays the pieces flat, and ships the tools. So anyone can run it. **Including you.**
+### The eight roles
+
+| Role | Lens | Appears |
+|---|---|---|
+| **Editor-in-Chief** | Contract, adjudication, sign-off | throughout |
+| **Data Engineer** | Where numbers come from, can they be recomputed | S3 · S6 |
+| **Industry Analyst** | Value-chain position, supply/demand, competition | S3 |
+| **Valuation Analyst** | Multiples, DCF, comparables | S3 |
+| **Red Team** | Paid to dismantle your own thesis | S4 |
+| **Charting** | One chart, one message | S6 |
+| **Layout** | Grid, hierarchy, whitespace | S7 |
+| **Proofreader** | Page-by-page visual nitpicking (plus zoomed re-checks) | S9 |
+
+Roles are **lens boundaries**, not job titles — one agent can wear several hats, but no hat gets to be both long and short on the same name.
+
+### Repository layout
+
+```text
+wallstreetype-research/
+├── methodology/                 library: 100-report list + 10 digests + paradigm manual
+│   ├── report_list_100.md
+│   ├── digests/                 group1.md … group10.md
+│   └── wallstreet_paradigm_manual.md
+├── pipeline/                    agent-agnostic pipeline definition
+│   ├── pipeline_orchestration.md  stage specs / gates / artifact schemas
+│   ├── agent_prompts.md           8 role briefs (EN + ZH)
+│   └── intake.md                  topic & layout questionnaire
+├── scripts/
+│   ├── data/                    live dual-market fetching (zero credentials)
+│   ├── charts/                  5 institutional chart families
+│   ├── layout/                  layout engine
+│   └── intake/                  questionnaire & brief generation
+├── templates/
+│   ├── report_template.md       report skeleton (YAML front matter)
+│   ├── md_to_docx.py            Markdown → Word / PDF (cover, rating box, TOC)
+│   └── styles/*.json            6 sell-side layout definitions
+├── examples/
+│   ├── nvda_demo/               NVIDIA sample (9 pages)
+│   ├── layout_demo/             layout comparison sample
+│   └── unitree_vs_nvidia/       end-to-end case: fetch → PDF
+├── docs/assets/                 images used by this README
+├── VERIFICATION.md              acceptance checklist
+└── README.md / README_EN.md
+```
 
 ---
 
-## 2. Six layout templates
+## The six layout templates
 
-Six **style-only** presets (fonts / colours / spacing / table treatment / masthead), extracted from the visual
-characteristics of public research reports. **No institution logos, wordmarks or text marks.**
-Switch with `--style <id>`.
+Their visual DNA comes from publicly available research reports, with **every institution name and mark removed** — only the typographic language is kept. They are not stickers: each is a complete definition of fonts, colours, layout, tables, rating box and masthead.
 
 <table>
 <tr>
-<td width="50%" align="center"><img src="docs/assets/styles/goldman_hardline_cover.png" alt="goldman_hardline"><br><b>goldman_hardline</b><br>Hardline<br><sub>Open grid, no boxes; serif masthead + sans body; navy accents; hairline rules; high density.<br>Best for: institutional deep-dives, data-dense reports.</sub></td>
-<td width="50%" align="center"><img src="docs/assets/styles/morganstanley_restrained_cover.png" alt="morganstanley_restrained"><br><b>morganstanley_restrained</b><br>Restrained<br><sub>Airy single column; light-weight sans masthead; one blue accent; wide margins.<br>Best for: thesis-driven narrative notes.</sub></td>
+<td width="33%" align="center"><img src="docs/assets/styles/goldman_hardline_cover.png" width="100%"><br><b>Hardline</b><br><sub>Open, frameless grid; serif display headings; navy accents; hairline rules; high density</sub><br><a href="docs/assets/styles/goldman_hardline_page.png">inner page →</a></td>
+<td width="33%" align="center"><img src="docs/assets/styles/morganstanley_restrained_cover.png" width="100%"><br><b>Restrained</b><br><sub>Generous whitespace, single column; light display type; one blue accent; wide margins</sub><br><a href="docs/assets/styles/morganstanley_restrained_page.png">inner page →</a></td>
+<td width="33%" align="center"><img src="docs/assets/styles/jpmorgan_heavyset_cover.png" width="100%"><br><b>Heavyset</b><br><sub>Dense two-column grid; heavy sans headings + serif body; grey table headers</sub><br><a href="docs/assets/styles/jpmorgan_heavyset_page.png">inner page →</a></td>
 </tr>
 <tr>
-<td width="50%" align="center"><img src="docs/assets/styles/jpmorgan_heavyset_cover.png" alt="jpmorgan_heavyset"><br><b>jpmorgan_heavyset</b><br>Heavyset<br><sub>Dense two-column; bold sans headings over serif body; slate-blue; tight leading.<br>Best for: full-chain reports with many tables and appendices.</sub></td>
-<td width="50%" align="center"><img src="docs/assets/styles/barclays_cyanline_cover.png" alt="barclays_cyanline"><br><b>barclays_cyanline</b><br>Cyan Line<br><sub>Cyan header band; tinted information rail; cyan table header with white text; medium-high density.<br>Best for: bullet-plus-sidebar layouts, chart-heavy notes.</sub></td>
-</tr>
-<tr>
-<td width="50%" align="center"><img src="docs/assets/styles/bernstein_monochrome_cover.png" alt="bernstein_monochrome"><br><b>bernstein_monochrome</b><br>Monochrome<br><sub>Strict black-and-white; black masthead bar; serif body; dense grid.<br>Best for: academic/quantitative research, B/W printing.</sub></td>
-<td width="50%" align="center"><img src="docs/assets/styles/ubs_swissminimal_cover.png" alt="ubs_swissminimal"><br><b>ubs_swissminimal</b><br>Swiss Minimal<br><sub>Two-tier title bands; deep navy + pale blue; generous margins.<br>Best for: restrained high-end institutional style.</sub></td>
+<td align="center"><img src="docs/assets/styles/barclays_cyanline_cover.png" width="100%"><br><b>Cyan Line</b><br><sub>Cyan masthead band; pale-blue sidebar; cyan table headers; light-weight display type</sub><br><a href="docs/assets/styles/barclays_cyanline_page.png">inner page →</a></td>
+<td align="center"><img src="docs/assets/styles/bernstein_monochrome_cover.png" width="100%"><br><b>Monochrome</b><br><sub>Pure black &amp; white; black top bar; serif body; tight grid; zero colour</sub><br><a href="docs/assets/styles/bernstein_monochrome_page.png">inner page →</a></td>
+<td align="center"><img src="docs/assets/styles/ubs_swissminimal_cover.png" width="100%"><br><b>Swiss Minimal</b><br><sub>Double title band; deep navy + pale blue; right-hand sidebar; wide margins</sub><br><a href="docs/assets/styles/ubs_swissminimal_page.png">inner page →</a></td>
 </tr>
 </table>
 
-<sub>The covers above are the **same case report** (Unitree, §3) rendered through all six templates.
-Each template also has a `_page.png` inner-page sample in [`docs/assets/styles/`](docs/assets/styles/).</sub>
-
-```bash
-python scripts/intake/intake.py --list          # list the six presets
-python templates/md_to_docx.py my_report.md --pdf --style ubs_swissminimal
-```
-
-**Add your own:** copy any `templates/styles/*.json`, change `id` and the fields (filename must equal `id`),
-and it works. Full field reference: [`templates/styles/README.md`](templates/styles/README.md).
+> Those twelve images are **the same report** rendered through all six layouts — cover and inner page. Click through for full resolution.
 
 ---
 
-## 3. Case study: Can Unitree Robotics surpass NVIDIA?
+## Showcase: what the output looks like
 
-> A complete demo report: [`examples/unitree_vs_nvidia/`](examples/unitree_vs_nvidia/)
-> ｜ [Markdown](examples/unitree_vs_nvidia/unitree_vs_nvidia.md)
-> ｜ [Word](examples/unitree_vs_nvidia/unitree_vs_nvidia.docx)
-> ｜ [PDF (7 pages)](examples/unitree_vs_nvidia/unitree_vs_nvidia.pdf)
+**Input** (`examples/unitree_vs_nvidia/`) — a spec, not a script:
 
-**Verdict up front:** on the rulers of **market cap / revenue / profit**, **no — not in any short horizon.**
-On the ruler of **narrative pricing**, **it did it on day one.**
-
-### Four rulers
-
-| Ruler | Unitree (688836.SH) | NVIDIA (NVDA) | Gap |
-|---|---|---|---|
-| Market cap | ¥207.9bn (US$31.0bn) | US$5.40tn (¥36.2tn) | **174×** |
-| Revenue (TTM) | ¥2.08bn | ¥2.03tn | **978×** |
-| Net income (TTM) | ¥0.58bn | ¥1.28tn | **2,187×** |
-| Robot units shipped | tens of thousands | 0 (NVIDIA does not build robots) | **Unitree leads 1 : 0** |
-| Valuation multiple (P/S) | 100.1× | 17.8× | **Unitree "wins"** |
-
-> To match NVIDIA's market cap, Unitree's share price would need to reach **¥89,437** — about **174×** from ¥513.93.
-
-### Six exhibits
-
-| | |
+| Item | Value |
 |---|---|
-| ![Gap](docs/assets/case/exhibit1_gap.png)<br><sub>**Exhibit 1** The three rulers, log scale</sub> | ![K-line](docs/assets/case/exhibit2_kline.png)<br><sub>**Exhibit 2** 16 sessions since IPO: −53%</sub> |
-| ![Valuation band](docs/assets/case/exhibit3_pe_band.png)<br><sub>**Exhibit 3** NVIDIA's valuation corridor vs Unitree's "if"</sub> | ![Financials](docs/assets/case/exhibit4_financials.png)<br><sub>**Exhibit 4** Revenue and profit: a good company, an expensive stock</sub> |
-| ![Scenarios](docs/assets/case/exhibit5_scenario.png)<br><sub>**Exhibit 5** Probability-weighted target ¥565</sub> | ![Catch-up](docs/assets/case/exhibit6_catchup.png)<br><sub>**Exhibit 6** How long to catch today's NVIDIA?</sub> |
+| Coverage | Unitree Robotics `688836.SH` (STAR Market) vs NVIDIA `NVDA` (NASDAQ) |
+| Data | A-share: Tencent Finance + East Money; US: Yahoo Finance; USD/CNY FX |
+| Hard constraint | **Every number comes from a real fetch — nothing is hand-typed in the scripts** |
+| Layout | `goldman_hardline` |
+| Deliverables | Markdown source + Word + PDF + 6 charts + raw JSON + per-page proof renders |
 
-**Catch-up timetable** (assuming NVIDIA stands still):
+**Output** (all in this repo — click any of it):
 
-| Unitree growth | Scenario | Years to match NVIDIA's **current** revenue |
-|---|---|---|
-| 100% | Dream | 9.9 |
-| 60% | Optimistic | 14.6 |
-| 48% | 2026H1 actual | 17.4 |
-| 30% | Mature phase | 26.2 |
-| 20% | Manufacturing mainstream | 37.8 |
-
-And if NVIDIA keeps growing — TTM revenue is **+105.9% YoY** — the table flips from "catch-up" to "never."
-
-### Where the numbers come from
-
-**Not a single hand-typed number** in the case study. Three automated steps:
-
-```bash
-python scripts/data/data_fetcher.py cn 688836 all --json   # 1. fetch real data
-python examples/unitree_vs_nvidia/compute_numbers.py       # 2. compute every metric
-python examples/unitree_vs_nvidia/make_case_charts.py      # 3. draw six exhibits + cover
-```
-
-Raw JSON (`data/*.json`), the computation script, the six exhibits, and the rendered Word/PDF all live in
-[`examples/unitree_vs_nvidia/`](examples/unitree_vs_nvidia/) — auditable cell by cell.
-
----
-
-## 4. Quick start
-
-```bash
-# 0. install
-pip install -r requirements.txt
-
-# 1. fetch data (Yahoo for US, Tencent + Eastmoney for A-shares; no API key)
-python scripts/data/data_fetcher.py us NVDA all --json
-python scripts/data/data_fetcher.py cn 688836 financials --json
-
-# 2. pick a layout (one of six)
-python scripts/intake/intake.py --list
-
-# 3. render (Markdown → Word / PDF)
-python templates/md_to_docx.py my_report.md -o out/report.docx --pdf --style jpmorgan_heavyset
-
-# 4. regenerate all chart samples (5 families, 500 dpi)
-python scripts/charts/report_charts.py
-```
-
-**One interface, two markets**: `cn 688836` / `us NVDA` — same fields on both sides.
-
-**Network note**: US data may need a proxy from mainland China
-(`export YAHOO_PROXY=socks5h://127.0.0.1:10808`). A-shares work directly.
-
----
-
-## 5. Architecture: 10 stages, 8 roles
-
-```
-main agent ── S0 intake ── S1 envelope ── S2 briefs ─┬── [child] Data Engineer   ─┐
-                                                     ├── [child] Industry Analyst ┼── parallel ── S5 main-agent adjudication
-                                                     ├── [child] Valuation Analyst│
-                                                     └── [child] Red Team ────────┘
-                            S6 [child] Chart Specialist ─ S7 [child] Layout Specialist ─ S8 main-agent final QA ─ S9 Proofing & QC (vision gate) ─ deliver
-```
-
-| Stage | Owner | Output |
-|---|---|---|
-| **S0** Intake | main agent (**never delegated**) | `brief/intake.json`: layout template + research-focus questionnaire |
-| **S1** Envelope | main agent | `envelope.json`: the task contract every brief references |
-| **S2** Briefs | main agent | one bilingual brief per role |
-| **S3–S4** Parallel research | Data Engineer / Industry / Valuation / Red Team | data, industry, valuation, challenge |
-| **S5** Adjudication | main agent | resolves conflicts; **only the main agent may change a conclusion** |
-| **S6–S7** Charts & layout | Chart / Layout Specialist | `charts/fig_*.png`, `final/report.*` |
-| **S8–S9** Final QA | main agent | vision proofing gate: per-page renders + number-reference cross-check |
-
-**The eight lenses are disjoint**: the Data Engineer writes no conclusions, the Industry Analyst touches no
-valuation, the Red Team challenges without editing, the Proofreader verifies without rewriting.
-**The main agent is the only orchestrator and the only adjudicator.**
-
-Methodology assets:
-
-| Asset | Location | Contents |
-|---|---|---|
-| Paradigm manual | [`methodology/wallstreet_paradigm_manual.md`](methodology/wallstreet_paradigm_manual.md) | 7 chapters: argument skeleton / method library / writing paradigm / chart standards / evidence discipline / red flags / red-team question bank |
-| 100-report list | [`methodology/report_list_100.md`](methodology/report_list_100.md) | a traceable seed library of methodology |
-| 10 group digests | [`methodology/digests/`](methodology/digests/) | five-dimension digest per report (method / prose / charts / action / lesson) |
-| Stage orchestration | [`pipeline/pipeline_orchestration.md`](pipeline/pipeline_orchestration.md) | I/O per stage, single-writer rules, quality gates |
-| Role briefs | [`pipeline/agent_prompts.md`](pipeline/agent_prompts.md) | 8 roles × bilingual brief templates |
-| Intake | [`pipeline/intake.md`](pipeline/intake.md) | S0 questionnaire: template choice + research focus |
-
-> **Agent-agnostic**: the pipeline is bound to no single AI. Use Codex, Claude Code, Cursor, Hermes —
-> or **do it yourself**. Every artifact is a file. There is no black box.
-
----
-
-## 6. Repository layout
-
-```
-wallstreetype-research/
-├── README.md / README_EN.md      # bilingual docs
-├── SKILL.md                      # skill definition (drop into any agent)
-├── requirements.txt
-├── methodology/                  # methodology assets
-│   ├── wallstreet_paradigm_manual.md   # 7-chapter paradigm manual
-│   ├── report_list_100.md              # 100-report seed library
-│   └── digests/group1..10.md           # 10 five-dimension digests
-├── pipeline/                     # orchestration
-│   ├── pipeline_orchestration.md       # S0–S9
-│   ├── agent_prompts.md                # 8 roles, bilingual briefs
-│   └── intake.md                       # S0 intake
-├── scripts/
-│   ├── data/                     # data layer: Yahoo / Tencent / Eastmoney, no API key
-│   ├── charts/                   # chart layer: 5 institutional families, 500 dpi
-│   └── intake/                   # intake CLI
-├── templates/
-│   ├── md_to_docx.py             # Markdown → Word / PDF renderer
-│   ├── report_template.md        # report skeleton (with frontmatter field docs)
-│   └── styles/*.json             # six layout presets
-├── examples/
-│   ├── nvda_demo/                # US demo: NVIDIA
-│   ├── unitree_vs_nvidia/        # bilingual case study (README §3)
-│   └── layout_demo/              # minimal layout example
-└── docs/assets/                  # README images (six template covers + case exhibits)
-```
-
----
-
-## 7. Three layers of tooling
-
-| Layer | Location | Capability |
-|---|---|---|
-| **Data** | [`scripts/data/`](scripts/data/) | US (Yahoo) / A-share (Tencent + Eastmoney) quotes, history (front-adjusted), fundamentals; **free, keyless, traceable** |
-| **Charts** | [`scripts/charts/`](scripts/charts/) | 5 families: K-line + volume, valuation band, financial trend, scenario bars, peer comparison; matplotlib + mplfinance, 500-dpi static PNG |
-| **Layout** | [`templates/`](templates/) | Markdown → Word / PDF; six presets; cover rating box, key data, headers/footers, disclosures |
-
-**Why not plotly / finplot?** Because the deliverable is a **500-dpi static PNG for Word/PDF embedding**,
-not an interactive widget. The selection comparison is in [`scripts/charts/README.md`](scripts/charts/README.md).
-
----
-
-## 8. "You can work for Wall Street"
-
-The project is called `wallstreetype-research` — the **"-type"** is deliberate.
-It is not Wall Street. It just **looks like** Wall Street.
-
-| Common objection | Answer |
+| File | What it is |
 |---|---|
-| "I have no finance background." | **Good.** That is precisely why this exists: the craft, broken into executable steps. |
-| "I don't have a Bloomberg terminal." | You don't need one. The data layer uses free public endpoints. |
-| "I can't code." | Three commands. And if you want to write it by hand, `report_template.md` is a fill-in-the-blank sheet. |
-| "Can I trust an AI-written report?" | Not on its own. That is why there is a Red Team, a source registry, a vision proofing gate, and a hard rule: an unregistered number is a violation. |
-| "Can I publish this directly?" | No. It is a **methodology demo**, not investment advice. |
-| "So who actually gets to work on Wall Street?" | People who can ask the right question, find every number, and write conclusions others can audit. **Credentials not required.** |
+| [`unitree_vs_nvidia.pdf`](examples/unitree_vs_nvidia/unitree_vs_nvidia.pdf) | Finished report, 7 pages, with cover / rating box / Key Data / 6 exhibits |
+| [`unitree_vs_nvidia.docx`](examples/unitree_vs_nvidia/unitree_vs_nvidia.docx) | Editable Word version (2.3 MB) |
+| [`unitree_vs_nvidia.md`](examples/unitree_vs_nvidia/unitree_vs_nvidia.md) | Source, including YAML front matter |
+| [`compute_numbers.py`](examples/unitree_vs_nvidia/compute_numbers.py) | Turns raw JSON into every number the report uses |
+| [`make_case_charts.py`](examples/unitree_vs_nvidia/make_case_charts.py) | The six exhibits (five reuse existing chart families) |
+| [`data/`](examples/unitree_vs_nvidia/data) | Raw fetched JSON + `numbers.json` |
+| [`proof/`](examples/unitree_vs_nvidia/proof) | S9 page-by-page proof renders |
+
+<table>
+<tr>
+<td width="50%"><img src="docs/assets/case/case_page01.png" width="100%"></td>
+<td width="50%"><img src="docs/assets/case/case_page03.png" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><sub>Cover: rating box + Key Data + price panel, filled in by script</sub></td>
+<td align="center"><sub>Inner page: numbered sections, tables and exhibits, all automatic</sub></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="33%"><img src="docs/assets/case/exhibit1_gap.png" width="100%"></td>
+<td width="33%"><img src="docs/assets/case/exhibit2_kline.png" width="100%"></td>
+<td width="33%"><img src="docs/assets/case/exhibit4_financials.png" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><sub>Peer comparison (log axis)</sub></td>
+<td align="center"><sub>K-line + volume</sub></td>
+<td align="center"><sub>Financial trend (dual axis)</sub></td>
+</tr>
+</table>
+
+**Cost of one run** (measured on this machine, Windows, direct domestic network): fetch **1.7 s** · compute **0.2 s** · charts **6.8 s** · Word/PDF export **10.3 s**.
+
+> The case's actual analysis lives inside the report ([open the PDF](examples/unitree_vs_nvidia/unitree_vs_nvidia.pdf)). This README answers exactly one question: **what does the thing produce?**
 
 ---
 
-## 9. Auditability
+## Engineering discipline
 
-- **Data**: all from public endpoints; raw JSON persisted (`examples/*/data/*.json`); no synthesis, no extrapolation.
-- **Numbers**: every case-study metric is computed by script from the raw JSON (`compute_numbers.py`) — **zero hand-typed numbers**.
-- **Citations**: every chart carries a source footnote; every number in the prose must be registered in `sources.json`, or S9 fails the report.
-- **QA**: S9 proofing is **vision-model only**, on per-page renders at ≥144 dpi, with 2× zoom re-checks on suspicious areas.
-  The independent verification report is [`VERIFICATION.md`](VERIFICATION.md).
+Research reports rarely break on the argument; they break on the numbers. The house rules here:
+
+- **Live data, never synthesised**: there is no mock branch in `data_fetcher.py` — if a fetch fails, it raises, it doesn't guess.
+- **Numbers are computed, not typed**: in the case study every figure is derived from raw JSON by `compute_numbers.py`; the report and the charts only read that output.
+- **Zero credentials**: public market endpoints only — no API keys, no brokerage accounts.
+- **De-institutionalised layouts**: the six templates keep the typography and drop every name and mark (see `_disclaimer` in `templates/styles/*.json`).
+- **A visual gate before delivery**: S9 renders the document at ≥144 DPI and nitpicks it page by page, zooming 2× into anything suspicious.
+- **Claims are checkable**: every statement in `VERIFICATION.md` maps to a reproducible action.
 
 ---
 
-## 10. Disclaimer and licence
+## You can work for Wall Street
 
-- **Not investment advice.** This is a methodology and engineering demo, not a recommendation to buy or sell any security.
-- **Layout templates are style references only**: fonts, colours and spacing were extracted from publicly
-  available research reports. **No institution logo, wordmark, watermark or analyst name is included**;
-  this project is unaffiliated with, and not endorsed by, any institution.
-- **Data sources**: Yahoo Finance (US), Tencent Finance / Eastmoney (A-shares). Data may be delayed or wrong — verify before use.
-- **Licence**: MIT. See [`LICENSE`](LICENSE).
+| Question | Answer |
+|---|---|
+| I have no finance background. Can I use this? | Yes. The whole premise is that the craft decomposes into steps. The methodology library documents the logic, the evidence bar and the red flags for each report type; the rest is execution. |
+| Is this the process real research desks use? | The structure, gates, role boundaries and delivery specs follow sell-side practice; the typographic language comes from public report samples. Whether the conclusions are worth anything is for the market to decide. |
+| Do I need a frontier model? | No. `pipeline/` is model-agnostic: any agent that can read/write files and run scripts can drive it — a fully manual run works too. |
+| Can I make it look like my own house style? | Copy a `templates/styles/*.json`, change fonts/colours/layout — that's a new template. Point `md_to_docx.py --style /path/to/your.json` at it. |
+| Are the numbers fabricated? | In the case study even a drawdown like −53% is computed. A failed fetch raises an error instead of degrading into placeholders. |
 
-<div align="center">
-<br>
-<sub>Asking the right question is harder than giving a pretty answer.</sub><br>
-<sub><b>— wallstreetype-research</b></sub>
-</div>
+---
+
+## Disclaimer
+
+This project is a **methodology and document-engineering demonstration**. It is not investment advice. Data comes from public endpoints, is indicative only, and the exchange and company filings prevail. Layout templates reference typographic style only: no institution names or marks are included, and there is no affiliation or endorsement.
+
+## License
+
+[MIT](LICENSE)

@@ -250,6 +250,9 @@ def financial_trend_chart(
     """
     cs.apply_theme()
     years = list(years)
+    revenue = np.asarray(revenue, dtype=float)
+    net_profit = np.asarray(net_profit, dtype=float)
+    yoy_growth = np.asarray(yoy_growth, dtype=float)
     x = np.arange(len(years))
     w = 0.38
 
