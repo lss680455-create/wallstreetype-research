@@ -47,7 +47,7 @@ in `brief/intake.json → template_id`.
 # list the presets (no files written)
 python scripts/intake/intake.py --list
 
-# render a report in a chosen style (S7/S8 of the pipeline)
+# render a report in a chosen style (S8/S9 of the pipeline)
 python templates/md_to_docx.py final/report.md -o final/report.docx --pdf --style goldman_hardline
 ```
 

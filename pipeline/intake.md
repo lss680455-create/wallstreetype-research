@@ -1,7 +1,10 @@
 # S0 — Intake: Template & Focus Questionnaire / 任务前意向采集
 
-> **Pipeline stage: S0** — the first step of every run, immediately **before S1 (envelope)**.
-> 流水线第 0 阶段：任何一次研报任务开始前的第一步，先于 S1（任务信封）。
+> **Pipeline stage: S0** — the first step of every run, immediately **before S1 (industry logic mapping)**.
+> 流水线第 0 阶段：任何一次研报任务开始前的第一步，先于 S1（产业逻辑梳理）。
+>
+> **S0 问"形式"，S1 问"方向"**：这一环只定版式 / 侧重 / 篇幅 / 语言等**可被默认**的事项；研究逻辑方向由
+> 下一环 S1 用五到六个问题向用户确认，且**不许代答**（见 [`logic_mapping.md`](logic_mapping.md)）。
 >
 > **Agent-agnostic / 代理无关:** any AI tool (Claude Code, Codex, Cursor, Hermes, a plain chat model) or a human
 > can execute this stage by following the text below. No tool-specific syntax, no vendor hooks.
@@ -10,7 +13,7 @@
 - Companion artifacts / 配套产物:
   - `scripts/intake/intake.py` — one-shot CLI that writes the artifact (stdlib only).
   - `templates/styles/` — the six layout templates (`*.json`) + `README.md` (catalogue & schema).
-- Output / 产出: **`brief/intake.json`** (the intake contract consumed by S1 → S9).
+- Output / 产出: **`brief/intake.json`** (the intake contract consumed by S2 → S10).
 
 ---
 
@@ -102,7 +105,7 @@ Ask all six questions. Each has options **and** a default; mark unanswered items
 Path convention / 路径约定:
 
 - **Repo-level intake area:** `brief/intake.json` (singular `brief/`; the pre-run input area).
-- At **S1** the main agent copies it into the run: `{RUN_ROOT}/briefs/intake.json`
+- At **S2** the main agent copies it into the run: `{RUN_ROOT}/briefs/intake.json`
   (plural `briefs/` = per-run briefs) so every run is self-contained and auditable.
 - The CLI defaults to `<repo_root>/brief/intake.json`; override with `--out PATH`.
 
@@ -134,7 +137,7 @@ JSON shape / 结构（field set is fixed; values must be from the allowed sets a
 | `special_requests` | array[string] | yes (may be `[]`) | free text; one entry per request |
 | `created_at` | string | yes | ISO-8601 with timezone offset |
 
-**中文：** 产物固定为 `brief/intake.json`（九个字段，见上表）；S1 时复制进 `{RUN_ROOT}/briefs/intake.json`
+**中文：** 产物固定为 `brief/intake.json`（九个字段，见上表）；S2 时复制进 `{RUN_ROOT}/briefs/intake.json`
 保证每轮自包含；CLI 默认写到仓库根 `brief/intake.json`，可用 `--out` 覆盖。
 
 ---
@@ -143,28 +146,28 @@ JSON shape / 结构（field set is fixed; values must be from the allowed sets a
 
 | Intake field | Injected at / into | Effect / 作用 |
 |---|---|---|
-| `template_id` | S7 layout brief, S8 conversion | `python templates/md_to_docx.py final/report.md -o final/report.docx --pdf --style <template_id>` — the report is typeset in the chosen template. |
-| `focus_areas` | S2 master brief → analyst briefs; S4 Red Team; S5 adjudication & skeleton | Sets **research-lens weights** (e.g. valuation-heavy vs growth-heavy), which sections come first, which claims get the most evidence; the Red Team prioritises its question bank on these lenses (e.g. `bull-bear` → force a full bear case; `event-driven` → challenge the catalyst calendar). |
+| `template_id` | S8 layout brief, S9 conversion | `python templates/md_to_docx.py final/report.md -o final/report.docx --pdf --style <template_id>` — the report is typeset in the chosen template. |
+| `focus_areas` | S3 master brief → analyst briefs; S5 Red Team; S6 adjudication & skeleton | Sets **research-lens weights** (e.g. valuation-heavy vs growth-heavy), which sections come first, which claims get the most evidence; the Red Team prioritises its question bank on these lenses (e.g. `bull-bear` → force a full bear case; `event-driven` → challenge the catalyst calendar). |
 | `horizon` | Valuation model, scenario periods, catalyst calendar, report wording | `short` → trading/quarterly framing, no long-DCF; `medium` → 12-month target price & scenarios; `long` → 3–5-year compounding case. |
-| `depth` | Whole pipeline | `quick` → skip the Red Team child (inline red-flag scan) and S6 charts; `standard` → full chain, ≥3 figures; `deep` → full figure set, 2 Red Team rounds. Copied into `envelope.depth`. |
+| `depth` | Whole pipeline | `quick` → skip the Red Team child (inline red-flag scan) and S7 charts; `standard` → full chain, ≥3 figures; `deep` → full figure set, 2 Red Team rounds. Copied into `envelope.depth`. |
 | `language` | `envelope.language`; all narratives, chart labels/captions, layout | Report language; source quotes keep their native language with `[S###]` citations. |
-| `chart_density` | S6 figure plan | `low` → 1–2 figures (price + one valuation); `standard` → 3–5 core figures; `high` → full set incl. peer comparison / sensitivity. |
-| `special_requests` | S2 role briefs, S4 question bank, S5 skeleton, S7 layout, disclosures | Each item becomes an explicit deliverable or evidence requirement (ESG → ESG evidence + section; 技术面 → technical chart + levels; 政策面 → policy scan; 同业对比 → peer table + relative valuation). |
+| `chart_density` | S7 figure plan | `low` → 1–2 figures (price + one valuation); `standard` → 3–5 core figures; `high` → full set incl. peer comparison / sensitivity. |
+| `special_requests` | S3 role briefs, S5 question bank, S6 skeleton, S8 layout, disclosures | Each item becomes an explicit deliverable or evidence requirement (ESG → ESG evidence + section; 技术面 → technical chart + levels; 政策面 → policy scan; 同业对比 → peer table + relative valuation). |
 | `created_at` | Audit trail | Provenance of the intake. |
 
-**Envelope wiring (S1):** copy `language`, `depth`, `horizon`, `template_id`, `chart_density`, `focus_areas`
+**Envelope wiring (S2):** copy `language`, `depth`, `horizon`, `template_id`, `chart_density`, `focus_areas`
 into `envelope.json` (new optional fields, see `pipeline_orchestration.md` §5) and derive
 `focus_question` / `constraints` from them. The intake file remains the source of truth for S0 answers.
 
 **中文：** `template_id`→排版阶段 `--style`；`focus_areas`→研究透镜权重、红队质询重点与章节顺序；
 `horizon`→估值窗口/情景/催化剂；`depth`→阶段裁剪；`language`→写作与图表语言；`chart_density`→图表选择；
-`special_requests`→额外证据与章节要求。S1 把这些字段抄进 `envelope.json`。
+`special_requests`→额外证据与章节要求。S2 把这些字段抄进 `envelope.json`。
 
 ---
 
 ## 7. S0 quality gate (G0) / 质量门
 
-Before proceeding to S1, all items must pass:
+Before proceeding to S1 (industry logic mapping), all items must pass:
 
 - [ ] Template chosen (or default declared to the user); `template_id` is one of the six ids.
 - [ ] All six questionnaire items answered or explicitly defaulted.
@@ -177,6 +180,12 @@ disclose them in the delivery summary. Never invent a user preference.
 
 **中文：** 模板已选/已声明默认、六问已回答或明示默认、JSON 九字段合法、答案已回显；
 不合格→再问一次，仍无法获得则用默认值并在交付时披露，不得编造。
+
+**What happens next / 下一步：** S1 (industry logic mapping + direction check) runs right after G0 — it reads
+`horizon` and `focus_areas` from this file to build its candidate driver list, then asks the user the **six
+direction questions** and writes `brief/industry_logic.md` + `brief/direction_confirmed.json`
+(see [`logic_mapping.md`](logic_mapping.md) §4). 版式类问题可以默认，方向类问题不可以：用户没答的方向，
+按 S1 的门禁 G0b 处理，不得静默替他选。
 
 ---
 

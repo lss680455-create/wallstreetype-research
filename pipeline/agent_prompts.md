@@ -7,12 +7,12 @@
 > Copy the text into any AI agent (Claude Code, Codex, Cursor, ChatGPT, an open-source model, ...) or hand it to a
 > human analyst — the workflow is identical.
 >
-> **How the main agent uses these (S2):** fill every `{{placeholder}}` below with concrete values from `envelope.json`
+> **How the main agent uses these (S3):** fill every `{{placeholder}}` below with concrete values from `envelope.json`
 > + the run, materialize the filled brief to `{RUN_ROOT}/briefs/brief_<role>.md` (audit trail), then send the child
 > **the brief text + full envelope JSON + absolute RUN_ROOT** — the child starts with a fresh context, so the brief
 > must be self-contained.
 >
-> 用法（S2 阶段）：把 `{{占位符}}` 全部替换为实际值，写入 `briefs/brief_<role>.md`，然后把简报全文 + envelope.json
+> 用法（S3 阶段）：把 `{{占位符}}` 全部替换为实际值，写入 `briefs/brief_<role>.md`，然后把简报全文 + envelope.json
 > 全文 + RUN_ROOT 绝对路径发给子代理（子代理上下文是全新的，简报必须自包含）。
 
 ## Placeholder legend / 占位符说明
@@ -29,8 +29,8 @@
 | `{{run_root}}` | **absolute** path of the run dir (injected at runtime) |
 | `{{envelope_path}}` | `{{run_root}}/envelope.json` |
 | `{{max_rounds}}` / `{{max_sources_per_claim}}` / `{{max_claims}}` | budget from envelope |
-| `{{figure_plan}}` | chart plan (main agent writes at S6; JSON) |
-| `{{report_skeleton}}` | section map from `decision.json` (main agent writes at S5) |
+| `{{figure_plan}}` | chart plan (main agent writes at S7; JSON) |
+| `{{report_skeleton}}` | section map from `decision.json` (main agent writes at S6) |
 
 **Universal rules embedded in every brief (do not strip):**
 1. You are a **leaf worker**: do the task described in this brief and nothing else. Do not spawn further agents, do not
@@ -43,8 +43,8 @@
    final report must (a) come from `data/` (a data file in the run), and (b) be registered in `data/numbers.json`
    数字引用表 with its data file + path + display format. **数字未登记引用表 = 违规范** — an
    unregistered core number is a violation, not a style choice. The Data Engineer maintains the initial registry
-   at S3; writers PROPOSE additions (label, source path, display) that the main agent accepts at S5; the
-   S9 vision proofing cross-checks the report against the registry — an unregistered or mismatched number that reaches the report fails G7.
+   at S4; writers PROPOSE additions (label, source path, display) that the main agent accepts at S6; the
+   S10 vision proofing cross-checks the report against the registry — an unregistered or mismatched number that reaches the report fails G7.
 7. Report back in the structured format at the end of your brief.
 
 ---
@@ -52,7 +52,7 @@
 # 1. Data Engineer / 数据工程师
 
 - **Lens 透镜:** Facts & numbers — what the numbers ARE. 事实与数字——数字是什么。
-- **Stage:** S3 (parallel with the two analysts, or sequential). **Always used.**
+- **Stage:** S4 (parallel with the two analysts, or sequential). **Always used.**
 - **Writes:** `data/*` only. **Must not:** interpret, opine, value, or write research narrative.
 
 ## EN — brief_data_engineer.md
@@ -73,7 +73,7 @@ OUTPUTS (the ONLY files you may write):
 3. {{run_root}}/data/fundamentals.json    — financial statements / key metrics for {{ticker}} ({{market}} GAAP/IFRS where applicable)
 4. {{run_root}}/data/price_history.csv    — price/volume series (24 months min; columns: date, open, high, low, close, volume, currency)
 5. {{run_root}}/data/estimates.json       — consensus estimates / company guidance / analyst targets (if findable)
-6. {{run_root}}/data/numbers.json         — 数字引用表 (number reference table): every key number (price, target, EPS, market cap, margins, growth...) as {"id": "...", "file": "...", "path": "...", "decimals": 2, "display_fmt" or "suffix"...}. Consumed by the S9 vision proofing as its cross-check reference. 数字未登记引用表=违规范 — the registry is the single memory of the data layer.
+6. {{run_root}}/data/numbers.json         — 数字引用表 (number reference table): every key number (price, target, EPS, market cap, margins, growth...) as {"id": "...", "file": "...", "path": "...", "decimals": 2, "display_fmt" or "suffix"...}. Consumed by the S10 vision proofing as its cross-check reference. 数字未登记引用表=违规范 — the registry is the single memory of the data layer.
 7. Optional market-specific files: {{run_root}}/data/<market>_<topic>.json (e.g. regulatory, macro, peers)
 
 STEPS:
@@ -88,7 +88,7 @@ STEPS:
 EVIDENCE RULES:
 - Grade scale: primary (regulator/company filings) > secondary (exchange data, official statistics) > tertiary (reputable media, analyst reports) > unverified (blogs, forums — label clearly, exclude from evidence unless nothing better exists).
 - Every number in fundamentals.json carries: source id, as-of date, currency, definition/scope (denominator, period).
-- Every number DESTINED for analysis must be registered in numbers.json (数字引用表) with file+path+tolerance — unregistered numbers will fail the S9 vision proofing.
+- Every number DESTINED for analysis must be registered in numbers.json (数字引用表) with file+path+tolerance — unregistered numbers will fail the S10 vision proofing.
 
 QUALITY CHECKLIST (all must pass before you finish):
 [ ] manifest.json + sources.json + numbers.json exist and are valid JSON
@@ -163,7 +163,7 @@ REPORT BACK (structured):
 # 2. Industry Analyst / 行业分析师
 
 - **Lens 透镜:** Business & competition — why the business works or fails. 生意与竞争——这门生意为什么成立或失败。
-- **Stage:** S3 (parallel, or sequential). **Must not:** fetch raw data (use `data/`), set target prices, build models.
+- **Stage:** S4 (parallel, or sequential). **Must not:** fetch raw data (use `data/`), set target prices, build models.
 - **Writes:** `research/industry.md`, `research/claims_industry.json`.
 
 ## EN — brief_industry.md
@@ -179,12 +179,18 @@ RUN CONTEXT (authoritative):
 INPUTS (read-only):
 - {{run_root}}/data/* — the data layer (already fetched; do NOT fetch raw data yourself; if a needed number is missing, use it as an assumption and say so)
 - envelope.json — for focus/budget
+- briefs/industry_logic.md — the S1 chain map: revenue mix, chain position with the pricing-power holder,
+  driver table (**the `direct` / `theme` tags are binding on you**), transmission chain with one observable proxy per hop
+- briefs/direction_confirmed.json — the user's confirmed direction (`view`, `primary_driver`, `competitive_set`, `falsification`)
 
 OUTPUTS (the ONLY files you may write):
 1. {{run_root}}/research/industry.md         — narrative (structure below)
 2. {{run_root}}/research/claims_industry.json — your claims, ids IND-001...IND-{{max_claims}} (schema below)
 
 ANALYSIS SCOPE (business & competition lens ONLY — no valuation):
+0. **Binding, before anything else:** the thesis axis is `primary_driver` from `briefs/direction_confirmed.json`;
+   a driver tagged `theme` in `briefs/industry_logic.md` may **not** be written up as a company revenue driver,
+   and every causal hop you assert needs the observable proxy named there (or must be labelled `unverifiable`).
 1. Business model: what {{company}} sells, to whom, how it makes money; revenue mix.
 2. Industry structure: market size (TAM with source), growth, concentration, competitive landscape, barriers to entry.
 3. Moat assessment: brand, scale, network effects, switching costs, cost advantages — with evidence, not adjectives.
@@ -204,7 +210,7 @@ EVIDENCE RULES:
 - Confidence must reflect evidence grade: primary-sourced facts ≥ 0.8; single-source interpretations ≤ 0.6.
 - HARD RULE: every number in your narrative must trace to data/* (else flag type=assumption). 数字未登记引用表=违规范 —
   propose each figure for data/numbers.json in your claims (`value_source: [file, path, display]`); the main agent
-  registers accepted ones at S5. A number that is not in the 数字引用表 by S9 fails gate G7.
+  registers accepted ones at S6. A number that is not in the 数字引用表 by S10 fails gate G7.
 
 QUALITY CHECKLIST (all must pass before you finish):
 [ ] industry.md covers: model / structure / moat / drivers / regulation / peers
@@ -234,12 +240,16 @@ REPORT BACK (structured):
 输入（只读）：
 - {{run_root}}/data/* —— 数据层（已抓取；不要自行抓原始数据；缺数字就用假设并明说）
 - envelope.json —— 焦点与预算
+- briefs/industry_logic.md —— S1 产业链逻辑图：收入结构、产业链位置与定价权归属、驱动变量表（**`direct`/`theme` 标注对你有约束力**）、逐步带可观测代理指标的传导链
+- briefs/direction_confirmed.json —— 用户确认的方向（`view`、`primary_driver`、`competitive_set`、`falsification`）
 
 输出（你唯一允许写入的文件）：
 1. {{run_root}}/research/industry.md            —— 分析正文（结构见下）
 2. {{run_root}}/research/claims_industry.json   —— 你的主张，编号 IND-001...IND-{{max_claims}}（schema 见下）
 
 分析范围（只做生意与竞争透镜——不做估值）：
+0. **先守这条**：论点轴 = `briefs/direction_confirmed.json` 的 `primary_driver`；`briefs/industry_logic.md` 里标
+   `theme` 的驱动**不得**写成公司收入驱动；你主张的每一跳因果都要有那里写明的可观测代理指标，否则标 `unverifiable`。
 1. 商业模式：{{company}} 卖什么、卖给谁、如何赚钱；收入结构。
 2. 行业结构：市场规模（TAM 带来源）、增速、集中度、竞争格局、进入壁垒。
 3. 护城河评估：品牌、规模、网络效应、转换成本、成本优势——用证据，不用形容词。
@@ -279,7 +289,7 @@ REPORT BACK (structured):
 # 3. Valuation Analyst / 估值分析师
 
 - **Lens 透镜:** Price & expectations — what the business is WORTH, what's priced in. 价格与预期——这门生意值多少、价格已隐含什么。
-- **Stage:** S3 (parallel, or sequential). **Must not:** re-litigate industry facts (accept `industry.md`, stress it in scenarios), fetch raw data.
+- **Stage:** S4 (parallel, or sequential). **Must not:** re-litigate industry facts (accept `industry.md`, stress it in scenarios), fetch raw data.
 - **Writes:** `research/valuation.md`, `research/claims_valuation.json`.
 
 ## EN — brief_valuation.md
@@ -296,6 +306,8 @@ INPUTS (read-only):
 - {{run_root}}/data/* — fundamentals, estimates, price history (do NOT fetch raw data)
 - {{run_root}}/research/industry.md — industry/business facts (accept as input; you may stress-test them in scenarios, not re-litigate)
 - envelope.json — focus/budget
+- briefs/direction_confirmed.json — `view` sets your valuation window and the weight of multiples vs DCF vs
+  scenario; `assumption_anchor` sets the base case; the `falsification` condition must survive your scenarios
 
 OUTPUTS (the ONLY files you may write):
 1. {{run_root}}/research/valuation.md          — narrative (structure below)
@@ -319,7 +331,7 @@ EVIDENCE RULES:
 - Never present a target price as evidence — it is a derived conclusion.
 - HARD RULE: every number (model inputs, scenario prices, implied multiples) must trace to data/* and be proposed
   for data/numbers.json (数字引用表) with file+path+display. 数字未登记引用表=违规范 — unregistered numbers fail
-  S9 gate G7 before delivery.
+  S10 gate G7 before delivery.
 
 QUALITY CHECKLIST (all must pass before you finish):
 [ ] valuation.md has: 3Y model, scenario table (base/bull/bear + probabilities + triggers), priced-in analysis, target range with derivation, catalyst timeline
@@ -350,6 +362,7 @@ REPORT BACK (structured):
 - {{run_root}}/data/* —— 财务、预期、行情（不要自行抓原始数据）
 - {{run_root}}/research/industry.md —— 行业/生意事实（作为输入接受；可在情景中压力测试，不要重做）
 - envelope.json —— 焦点/预算
+- briefs/direction_confirmed.json —— `view` 决定你的估值窗口与倍数/DCF/情景的权重；`assumption_anchor` 决定基准情形；用户的 `falsification` 条件必须能在你的情景里被检验
 
 输出（你唯一允许写入的文件）：
 1. {{run_root}}/research/valuation.md           —— 分析正文（结构见下）
@@ -393,7 +406,7 @@ REPORT BACK (structured):
 # 4. Red Team / 质询官（红队）
 
 - **Lens 透镜:** Counter-evidence & falsification — what could be WRONG. 反证与证伪——什么可能是错的。
-- **Stage:** S4 (single child; skipped in `quick` tier — main agent runs an inline red-flag scan instead).
+- **Stage:** S5 (single child; skipped in `quick` tier — main agent runs an inline red-flag scan instead).
 - **Must not:** produce new positive claims, write to `data/` or `research/`, rewrite claims.
 - **Writes:** `review/redteam.md`, `review/reviews.json`.
 
@@ -411,6 +424,8 @@ INPUTS (read-only):
 - {{run_root}}/research/claims_industry.json and claims_valuation.json  (the claims to attack)
 - {{run_root}}/research/industry.md, valuation.md                       (full narratives)
 - {{run_root}}/data/sources.json, data/manifest.json                    (to check evidence quality)
+- briefs/direction_confirmed.json                                       (the user's `falsification` answer **is your brief**
+                                                                        — attack that condition first, then everything else)
 - envelope.json
 
 OUTPUTS (the ONLY files you may write):
@@ -456,6 +471,7 @@ REPORT BACK (structured):
 - {{run_root}}/research/claims_industry.json 与 claims_valuation.json（待攻击的主张）
 - {{run_root}}/research/industry.md、valuation.md（完整正文）
 - {{run_root}}/data/sources.json、data/manifest.json（核查证据质量）
+- briefs/direction_confirmed.json（用户给出的 `falsification` **就是你的简报**：先攻这个条件，再攻其余）
 - envelope.json
 
 输出（你唯一允许写入的文件）：
@@ -493,7 +509,7 @@ REPORT BACK (structured):
 # 5. Chart Specialist / 图表师
 
 - **Lens 透镜:** Visual evidence — figures that make approved claims legible. 可视化——让已裁决的主张一目了然。
-- **Stage:** S6 (single child; skipped in `quick` tier).
+- **Stage:** S7 (single child; skipped in `quick` tier).
 - **Must not:** new analysis, change numbers, write claims.
 - **Writes:** `charts/manifest.json`, `charts/fig_*.png`.
 
@@ -591,7 +607,7 @@ REPORT BACK (structured): produced figure ids, any skipped + why, manifest path.
 # 6. Layout Specialist / 排版师
 
 - **Lens 透镜:** Structure & readability — a report a human can actually read. 结构与可读性——人类能真正读下去的报告。
-- **Stage:** S7 (single child). **Must not:** content edits beyond mechanical fixes, new opinions.
+- **Stage:** S8 (single child). **Must not:** content edits beyond mechanical fixes, new opinions.
 - **Writes:** `draft/report_draft.md` (+ `final/report.*` conversions via `templates/md_to_docx.py` if present).
 
 ## EN — brief_layout.md
@@ -633,7 +649,7 @@ RULES:
 4. open_questions are disclosed in the appendix — never hidden.
 5. Content fixes beyond mechanics (a wrong number, a false statement) are NOT yours: flag them in your report-back; the main agent decides.
 6. Language: report in {{language}}; keep non-English source titles as-is with [S###] refs.
-7. HARD RULE: every core number in the draft must be registered in data/numbers.json (数字引用表). 数字未登记引用表=违规范 — check each number against the registry as you assemble; flag any unregistered one in your report-back (the main agent resolves at S5/S9, where the S9 vision proofing verifies registration page by page).
+7. HARD RULE: every core number in the draft must be registered in data/numbers.json (数字引用表). 数字未登记引用表=违规范 — check each number against the registry as you assemble; flag any unregistered one in your report-back (the main agent resolves at S6/S10, where the S10 vision proofing verifies registration page by page).
 
 QUALITY CHECKLIST (all must pass before you finish):
 [ ] all skeleton sections present, in order
@@ -706,17 +722,17 @@ REPORT BACK (structured): sections written, figures embedded, any content-level 
 
 ---
 
-# 7. Proofreader / 校对员（S9，可选助手角色）
+# 7. Proofreader / 校对员（S10，可选助手角色）
 
 - **Lens 透镜:** Compliance & polish — does the report survive the quality gate? 合规与打磨——报告能否过质量门。
-- **Stage:** S9 (assistant to the main agent; optional). **Must not:** create new analysis, change numbers, rewrite
+- **Stage:** S10 (assistant to the main agent; optional). **Must not:** create new analysis, change numbers, rewrite
   prose, edit any artifact. The proofreader VERIFIES; it never edits content.
 - **Writes:** `proof/visual_proofing.md` (per-page visual checklist), `proof/pages/` (rendered page images if missing).
 
 ## EN — brief_proofreader.md
 
 ```text
-ROLE: Proofreader (Wall Street Research pipeline, S9 quality gate assistant, leaf worker).
+ROLE: Proofreader (Wall Street Research pipeline, S10 quality gate assistant, leaf worker).
 MISSION: Run the G7 quality gate honestly. The report is PUBLISHED only if every check passes. You verify — you never edit content or introduce analysis.
 
 RUN CONTEXT (authoritative):
@@ -752,7 +768,7 @@ G7 CHECKLIST (verify each; report the PASS/FAIL list to the main agent):
 [ ] no {{PLACEHOLDER}} residue in md/publications
 [ ] reading pass: citations resolve, no duplicated sections
 HARD RULE: you must NOT rewrite, renumber, or "improve" any content. Any finding is reported as
-(page, item, PASS/FAIL) — the main agent dispatches fixes (typically back to S7) and asks you to re-run.
+(page, item, PASS/FAIL) — the main agent dispatches fixes (typically back to S8) and asks you to re-run.
 
 LANGUAGE: notes in {{language}}; the visual checklist keys stay in the standard list above.
 BUDGET: ~{{approx_minutes}} min (rendering + per-page vision passes dominate).
@@ -761,7 +777,7 @@ BUDGET: ~{{approx_minutes}} min (rendering + per-page vision passes dominate).
 ## ZH — brief_proofreader.md
 
 ```text
-角色：校对员（华尔街研报流水线 S9 质量门助手，叶子工人）。
+角色：校对员（华尔街研报流水线 S10 质量门助手，叶子工人）。
 任务：诚实地执行 G7 质量门。报告只有在所有检查通过后才会发布。你只核验——绝不编辑内容或引入分析。
 
 运行上下文（权威）：RUN_ROOT={{run_root}}；信封={{envelope_path}}
@@ -792,7 +808,7 @@ G7 清单（逐项核验，向主编报告 PASS/FAIL）：
 [ ] md 与成品中无 {{PLACEHOLDER}} 残留
 [ ] 阅读检查：引用可解析、无重复章节
 硬规则：不得改写、重新编号或"改善"任何内容。所有发现以（页号、检查项、PASS/FAIL）上报——
-由主编派发修复（通常回到 S7），修复后再请你复跑。
+由主编派发修复（通常回到 S8），修复后再请你复跑。
 
 语言：记录用 {{language}}；视觉检查项键名保持上述标准列表。
 预算：约 {{approx_minutes}} 分钟（渲染与逐页视觉检查为主）。
@@ -802,28 +818,37 @@ G7 清单（逐项核验，向主编报告 PASS/FAIL）：
 
 # Main-Agent Operating Protocol / 主编操作规程（主代理，不委派）
 
-The main agent **never delegates** S1, S2, S5, S8, S9. Summary of duties (full detail in `pipeline_orchestration.md` §8, §9, §13):
+The main agent **never delegates** S0, S1, S2, S3, S6, S9, S10. Summary of duties (full detail in `pipeline_orchestration.md` §8, §9, §13):
 
-1. **S1** parse input → `envelope.json` (ticker/market/language/depth/focus/budget), create run dirs.
-2. **S2** fill the 6 briefs above (resolve all `{{...}}`), write to `briefs/`.
-3. **S3** dispatch 3 research children — one parallel batch where supported, else sequentially; run gate G1;
+0. **S0** — template + focus questions per [`intake.md`](intake.md); write `brief/intake.json`; gate **G0**.
+1. **S1** — industry logic map (five moves, [`logic_mapping.md`](logic_mapping.md) §3) + the **six direction
+   questions** asked to the user (§4); write `brief/industry_logic.md` + `brief/direction_confirmed.json`;
+   gate **G0b**. Ask the six questions in one pass before touching data; a direction the user never gave may not
+   be defaulted in silence.
+2. **S2** parse input → `envelope.json` (ticker/market/language/depth/focus/budget), create run dirs; copy the
+   S1 artifacts into `briefs/`.
+3. **S3** fill the 6 briefs above (resolve all `{{...}}`), write to `briefs/`.
+4. **S4** dispatch 3 research children — one parallel batch where supported, else sequentially; run gate G1;
    narrow revise once if a role failed; degrade with disclosure if needed.
-4. **S4** (unless `quick`) dispatch Red Team; run gate G2.
-5. **S5** adjudicate inline: verdict per claim (accept/refute/qualify/unverified), write `minority_report` (mandatory),
+5. **S5** (unless `quick`) dispatch Red Team; run gate G2.
+6. **S6** adjudicate inline: verdict per claim (accept/refute/qualify/unverified), write `minority_report` (mandatory),
    build `report_skeleton`, promote accepted counter-evidence into `sources.json`, record `open_questions`; run gate G3.
-6. **S6** (unless `quick`) write figure plan → dispatch Chart Specialist; run gate G4.
-7. **S7** dispatch Layout Specialist; run gate G5.
-8. **S8** final checklist (gate G6) → publish `final/` → run S9 → deliver: thesis, key numbers, risks, open questions, artifact paths.
-9. **S9** Proofing & QC (gate G7): render page PNGs and run the visual checklist with a **vision-capable
+7. **S7** (unless `quick`) write figure plan → dispatch Chart Specialist; run gate G4.
+8. **S8** dispatch Layout Specialist; run gate G5.
+9. **S9** final checklist (gate G6) → publish `final/` → run S10 → deliver: thesis, key numbers, risks, open questions, artifact paths.
+10. **S10** Proofing & QC (gate G7): render page PNGs and run the visual checklist with a **vision-capable
    model** (never text-only judgment), cross-checking every core number against `numbers.json`;
-   proofreader role available (brief #7). Red G7 → narrow fix (usually back to S7) → re-render and re-proof.
+   proofreader role available (brief #7). Red G7 → narrow fix (usually back to S8) → re-render and re-proof.
 
 **Main-agent discipline (never violated):**
+- S1 方向不代答：六问必须真问出去；用户未答的方向不得静默默认（须 `direction_assumed: true` + 报告封面逐条披露），**G0b 未过不得开 S2**。
+- `theme` 标注的驱动，后续任何阶段都不得改写为公司收入驱动；S1 里标 `unverifiable` 的传导跳，报告里不得当事实写。
 - 主代理绝不凭整体印象裁决——先读齐所有 artifacts，逐 claim 裁决。
 - 强制保留 minority report（共识也可能是共同错误）。
 - 不无限加轮次：预算在 envelope，超预算即降级交付并披露。
 - 不伪造证据：找不到的数据写进 open_questions，不猜数。
 - G7 红灯不发版：视觉校对任一页/项失败，先修复再发布。
 
-**One-line cheat-sheet:** S1 envelope → S2 briefs → S3 batch-3 research → G1 → S4 red team → G2 →
-S5 verdicts+minority+skeleton → G3 → S6 charts → G4 → S7 layout → G5 → S8 final checklist → S9 vision proofing → G7 → deliver.
+**One-line cheat-sheet:** S0 intake → G0 → S1 logic map + direction check (G0b) → S2 envelope → S3 briefs →
+S4 batch-3 research → G1 → S5 red team → G2 → S6 verdicts+minority+skeleton → G3 → S7 charts → G4 →
+S8 layout → G5 → S9 final checklist → S10 vision proofing → G7 → deliver.

@@ -29,10 +29,11 @@
 - 📚 **方法论库** — 100 篇卖方研报拆解清单（124 行）+ 10 组主题凝练 + 550 行《华尔街范式手册》：研究思路、证据纪律、红旗清单。 → [`methodology/`](methodology)
 - 📈 **双市场数据层** — A 股 + 美股，报价 / 日线 / 财务，一条命令取数，**零 API key**。 → [`scripts/data/`](scripts/data)
 - 📊 **五类机构级图表** — K 线+成交量、估值带、财务趋势（双轴）、情景柱、同业对标，统一样式与配色。 → [`scripts/charts/`](scripts/charts)
-- 🔀 **S0–S9 研究流水线** — 10 个阶段 / 8 个角色透镜 / 8 道质量门禁 / 结构化交接工件。 → [`pipeline/`](pipeline)
+- 🔀 **S0–S10 研究流水线** — 11 个阶段 / 8 个角色透镜 / 8 道质量门禁 / 结构化交接工件。 → [`pipeline/`](pipeline)
+- 🧭 **开工前先梳理产业逻辑** — 动笔前把"靠什么赚钱 / 产业链位置 / 驱动变量 / 传导链 / 周期位置"整理成一张逻辑图，再向用户提 **5–6 个方向确认问题**（期限、主线变量、假设锚点、真对手、证伪条件、产出取向）；用户没答的方向不许静默默认。 → [`pipeline/logic_mapping.md`](pipeline/logic_mapping.md)
 - 📄 **Markdown → Word / PDF 引擎** — 自动生成封面、评级框、Key Data 表、目录、编号章节、图表嵌入，中英文字体自适应。 → [`templates/md_to_docx.py`](templates/md_to_docx.py)
 - 🎨 **六套机构版式** — 每套都是字体 / 配色 / 布局 / 表格 / 评级框的完整 JSON 定义，改一份就是新模板；机构名称与标识已全部移除。 → [`templates/styles/`](templates/styles)
-- ✅ **可验收** — 每条产出对应一个可复现动作，最后一关把成品渲染成图、逐页视觉挑刺。 → [`VERIFICATION.md`](VERIFICATION.md)
+- ✅ **可验收** — 每条产出对应一个可复现动作，最后一关把成品渲染成图、逐页视觉挑刺；全仓库一致性自检一条命令：`python scripts/verify_consistency.py`。 → [`VERIFICATION.md`](VERIFICATION.md)
 
 ---
 
@@ -80,18 +81,38 @@ python scripts/charts/report_charts.py       # → scripts/charts/sample_pngs/
 
 ```text
 读 pipeline/pipeline_orchestration.md，
-按 S0–S9 流程产出一份 XX 公司的深度研报，
+先做 S0 意向采集 + S1 产业逻辑梳理（含 5–6 个方向确认问题，答完才开工），
+再按 S2–S10 流程产出一份 XX 公司的深度研报，
 版式用 ubs_swissminimal，双市场数据用 scripts/data/。
 每个阶段的产物落到工作区，门禁不通过就退回重做。
 ```
+
+**开工前的方向确认（S1）**——跑任何研究之前，先把逻辑方向钉死：
+
+```bash
+python scripts/intake/direction_check.py --questions                                 # 打印这六问
+python scripts/intake/direction_check.py --skeleton > brief/direction_confirmed.json # 生成空白模板
+python scripts/intake/direction_check.py --check    brief/direction_confirmed.json   # 门禁 G0b
+```
+
+| # | 问什么 | 选项 / 回答是什么 |
+|---|---|---|
+| Q1 | 视角与期限 | 交易 ≤3 个月 / 基本面 6–12 个月 / 产业趋势 3 年以上 |
+| Q2 | 主线变量 | 从梳理出的 2–3 个候选驱动里选一个当论点轴（可改写、可新增） |
+| Q3 | 假设锚点 | 公司指引 / 一致预期 / 你给区间 / 历史外推 |
+| Q4 | 真正的对手 | 直接竞品 / 替代技术 / 跨界巨头（可多选） |
+| Q5 | 证伪条件 | 什么可观测信号出现你就认输（出货量、毛利、订单、ASP、产能利用率…） |
+| Q6 | 产出取向 | 估值驱动 / 事件驱动 / 主题梳理，外加侧重增长·风险·估值 |
+
+答案不是问卷装饰：`view` 决定估值窗口与倍数/DCF/情景的权重，`primary_driver` 是全篇论点轴，`assumption_anchor` 定基准情形，`falsification` 直接变成红队简报。**这六问不许代答**——用户没给的方向按 `direction_assumed: true` 处理，并在报告封面逐条披露假设。
 
 ---
 
 ## 架构
 
-<img src="docs/assets/architecture.png" width="100%" alt="Ten-stage research pipeline">
+<img src="docs/assets/architecture.png" width="100%" alt="Eleven-stage research pipeline">
 
-`pipeline/pipeline_orchestration.md`（636 行）定义每个阶段的输入、输出、责任角色与门禁检查项；`pipeline/agent_prompts.md`（829 行）是 8 个角色的中英双语工作简报。三种深度档位（快速简报 / 标准单公司 / 深度专题）按档裁剪，不是每次都跑满。
+`pipeline/pipeline_orchestration.md`（756 行）定义每个阶段的输入、输出、责任角色与门禁检查项；`pipeline/agent_prompts.md`（854 行）是 8 个角色的中英双语工作简报；`pipeline/logic_mapping.md`（242 行）是 S1 那一环的完整规格——五步产业逻辑梳理 + 六问全文；`pipeline/intake.md`（201 行）是 S0 的意向问卷。三种深度档位（快速简报 / 标准单公司 / 深度专题）按档裁剪，不是每次都跑满（S0 与 S1 例外：任何档位都不跳过方向确认）。
 
 **八个角色**（透镜边界，不是头衔——同一个 agent 可以换帽子，但同一顶帽子不能既做多又做空）
 
@@ -114,12 +135,13 @@ wallstreetype-research/
 ├── pipeline/                    流水线定义（agent 无关，任何模型都能跑）
 │   ├── pipeline_orchestration.md  阶段规格 / 门禁 / 工件
 │   ├── agent_prompts.md           8 个角色简报（中英双语）
+│   ├── logic_mapping.md           S1 产业逻辑梳理 + 六问方向确认
 │   └── intake.md                  选题与版式问卷
 ├── scripts/
 │   ├── data/                    双市场取数（零密钥）
 │   ├── charts/                  5 类机构级图表
 │   ├── layout/                  版式层说明
-│   └── intake/                  问卷与 brief 生成
+│   └── intake/                  问卷 / 方向契约（direction_check.py 门禁 G0b）
 ├── templates/
 │   ├── report_template.md       报告骨架（YAML front matter）
 │   ├── md_to_docx.py            Markdown → Word / PDF
@@ -187,7 +209,9 @@ wallstreetype-research/
 
 | 文档 | 内容 |
 |---|---|
-| [`pipeline/pipeline_orchestration.md`](pipeline/pipeline_orchestration.md) | 十阶段流程、门禁检查项、工件格式 |
+| [`pipeline/pipeline_orchestration.md`](pipeline/pipeline_orchestration.md) | 十一阶段流程、门禁检查项、工件格式 |
+| [`pipeline/logic_mapping.md`](pipeline/logic_mapping.md) | S1 产业逻辑梳理五步法 + 六个方向确认问题 |
+| [`pipeline/intake.md`](pipeline/intake.md) | S0 版式与侧重问卷 |
 | [`pipeline/agent_prompts.md`](pipeline/agent_prompts.md) | 8 个角色的中英双语简报模板 |
 | [`methodology/wallstreet_paradigm_manual.md`](methodology/wallstreet_paradigm_manual.md) | 华尔街范式手册：研究思路、证据纪律、红旗清单 |
 | [`templates/styles/README.md`](templates/styles/README.md) | 六套版式的字段说明与自定义方法 |

@@ -3,7 +3,7 @@
 **Date:** 2026-09-10 · **Method:** every theme rendered the same NVDA demo
 (`examples/nvda_demo/nvda_report.md`) through `templates/md_to_docx.py --style <id> --pdf`,
 pages rendered at **150 DPI** and inspected page-by-page by a **vision-capable model**
-(no programmatic layout judgement — per the S9 rule). Suspected defects were re-checked on
+(no programmatic layout judgement — per the S10 rule). Suspected defects were re-checked on
 ≥2x cropped zooms before being recorded.
 
 ## Per-theme result (cover + body pages)
@@ -30,7 +30,7 @@ identifier of any kind**; default theme (no `--style`) unchanged at 9 pages.
 | JPM table header "Fical year" | `Fiscal year` (docx + PDF text layer both correct) | serif glyph misread at low res |
 
 All three were **excluded** after zoom re-check. Rule added to
-`pipeline/pipeline_orchestration.md` (S9) and `pipeline/agent_prompts.md`:
+`pipeline/pipeline_orchestration.md` (S10) and `pipeline/agent_prompts.md`:
 *render ≥144 DPI, zoom ≥2x before recording a finding.*
 
 ## Real defects found and fixed in this pass

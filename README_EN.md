@@ -29,10 +29,11 @@ The methodology, market data, charting, page layout and quality gates are all sh
 - 📚 **Methodology library** — a 124-line breakdown of 100 sell-side reports, 10 thematic digests, and a 550-line Wall Street paradigm manual covering research logic, evidence discipline and red-flag checklists. → [`methodology/`](methodology)
 - 📈 **Dual-market data layer** — US and A-share quotes, price history and financials behind one command, with **zero API keys**. → [`scripts/data/`](scripts/data)
 - 📊 **Five chart families** — price + volume candles, valuation band, dual-axis financial trend, scenario bars, peer comparison, all sharing one house style. → [`scripts/charts/`](scripts/charts)
-- 🔀 **Ten-stage pipeline (S0–S9)** — 10 stages, 8 role lenses, 8 quality gates, structured hand-off artifacts. → [`pipeline/`](pipeline)
+- 🔀 **Eleven-stage pipeline (S0–S10)** — 11 stages, 8 role lenses, 8 quality gates, structured hand-off artifacts. → [`pipeline/`](pipeline)
+- 🧭 **Industry logic first** — before a word is written, the industry chain is mapped (how the company earns / where it sits / what drives it / how it transmits / where in the cycle) and the user gets **5–6 direction questions** (horizon, primary driver, assumption anchor, real competitor, falsification, output orientation). A direction the user never gave is not silently defaulted. → [`pipeline/logic_mapping.md`](pipeline/logic_mapping.md)
 - 📄 **Markdown → Word / PDF engine** — generates the cover, rating box, key-data table, table of contents, numbered sections and embedded figures, with CJK-aware fonts. → [`templates/md_to_docx.py`](templates/md_to_docx.py)
 - 🎨 **Six institutional layouts** — each one a complete JSON definition of fonts, palette, layout, tables and rating box; tweak a copy and you have a new template. All firm names and marks removed. → [`templates/styles/`](templates/styles)
-- ✅ **Verifiable output** — every claim maps to a reproducible action, and the final gate renders the finished document to images for page-by-page visual review. → [`VERIFICATION.md`](VERIFICATION.md)
+- ✅ **Verifiable output** — every claim maps to a reproducible action, and the final gate renders the finished document to images for page-by-page visual review. Repo self-check in one command: `python scripts/verify_consistency.py`. → [`VERIFICATION.md`](VERIFICATION.md)
 
 ---
 
@@ -80,19 +81,39 @@ python scripts/charts/report_charts.py       # → scripts/charts/sample_pngs/
 **Run the whole pipeline** — hand this to any AI agent, or follow it yourself:
 
 ```text
-Read pipeline/pipeline_orchestration.md and produce an in-depth research report
-on <COMPANY> by following the S0–S9 process, using the ubs_swissminimal layout
-and scripts/data/ for dual-market data. Write every stage artifact to the
-workspace, and send a stage back whenever its gate fails.
+Read pipeline/pipeline_orchestration.md. Start with S0 (intake) and S1 (industry logic
+mapping + the 5–6 direction questions — the run does not begin until they are answered),
+then produce an in-depth research report on <COMPANY> by following S2–S10, using the
+ubs_swissminimal layout and scripts/data/ for dual-market data. Write every stage artifact
+to the workspace, and send a stage back whenever its gate fails.
 ```
+
+**Direction check before the run (S1)** — nail the logic down before any research starts:
+
+```bash
+python scripts/intake/direction_check.py --questions                                 # print the six questions
+python scripts/intake/direction_check.py --skeleton > brief/direction_confirmed.json # blank template
+python scripts/intake/direction_check.py --check    brief/direction_confirmed.json   # gate G0b
+```
+
+| # | Question | Answers |
+|---|---|---|
+| Q1 | View & horizon | trading (≤3m) / fundamental (6–12m) / industrial trend (3y+) |
+| Q2 | Primary driver | pick the axis among the 2–3 candidate drivers — rewrite or add your own |
+| Q3 | Assumption anchor | company guidance / consensus / your own range / historical extrapolation |
+| Q4 | The real competitor | direct peer / substitute technology / adjacent giant (multi-select) |
+| Q5 | Falsification | the observable signal that would make you drop the thesis (shipments, gross margin, orders, ASP, utilisation…) |
+| Q6 | Output orientation | valuation-driven / event-driven / thematic, plus emphasis on growth · risk · valuation |
+
+The answers are wired into the run, not filed away: `view` sets the valuation window and the weight of multiples vs DCF vs scenario, `primary_driver` is the thesis axis, `assumption_anchor` sets the base case, and `falsification` becomes the Red Team's brief. **These six are never answered on the user's behalf** — an unanswered direction runs as `direction_assumed: true` with every assumed value disclosed on the cover.
 
 ---
 
 ## Architecture
 
-<img src="docs/assets/architecture.png" width="100%" alt="Ten-stage research pipeline">
+<img src="docs/assets/architecture.png" width="100%" alt="Eleven-stage research pipeline">
 
-`pipeline/pipeline_orchestration.md` (636 lines) defines the inputs, outputs, owning role and gate checklist for every stage; `pipeline/agent_prompts.md` (829 lines) holds bilingual briefs for all eight roles. Three depth tiers (quick brief / standard single-company / deep thematic) trim the same flow — you don't run the full thing every time.
+`pipeline/pipeline_orchestration.md` (756 lines) defines the inputs, outputs, owning role and gate checklist for every stage; `pipeline/agent_prompts.md` (854 lines) holds bilingual briefs for all eight roles; `pipeline/logic_mapping.md` (242 lines) is the full spec of the S1 ring — the five-move industry map plus the six questions; `pipeline/intake.md` (201 lines) is the S0 form. Three depth tiers (quick brief / standard single-company / deep thematic) trim the same flow — you don't run the full thing every time (S0 and S1 excepted: no tier skips the direction check).
 
 **Eight roles** (lens boundaries, not job titles — one agent can wear several hats, but a single hat can't argue both sides of the trade)
 
@@ -115,12 +136,13 @@ wallstreetype-research/
 ├── pipeline/                    pipeline specs (model-agnostic)
 │   ├── pipeline_orchestration.md  stage specs / gates / artifacts
 │   ├── agent_prompts.md           8 role briefs (EN + ZH)
+│   ├── logic_mapping.md           S1 industry map + the six direction questions
 │   └── intake.md                  topic + layout questionnaire
 ├── scripts/
 │   ├── data/                    dual-market fetching (no keys)
 │   ├── charts/                  5 chart families
 │   ├── layout/                  layout layer documentation
-│   └── intake/                  questionnaire → brief
+│   └── intake/                  questionnaire / direction contract (direction_check.py, gate G0b)
 ├── templates/
 │   ├── report_template.md       report skeleton (YAML front matter)
 │   ├── md_to_docx.py            Markdown → Word / PDF
@@ -188,7 +210,9 @@ The visual language is drawn from publicly available research notes with **all f
 
 | Document | Contents |
 |---|---|
-| [`pipeline/pipeline_orchestration.md`](pipeline/pipeline_orchestration.md) | Ten-stage flow, gate checklists, artifact formats |
+| [`pipeline/pipeline_orchestration.md`](pipeline/pipeline_orchestration.md) | Eleven-stage flow, gate checklists, artifact formats |
+| [`pipeline/logic_mapping.md`](pipeline/logic_mapping.md) | S1: the five-move industry map and the six direction questions |
+| [`pipeline/intake.md`](pipeline/intake.md) | S0: layout and focus questionnaire |
 | [`pipeline/agent_prompts.md`](pipeline/agent_prompts.md) | Bilingual brief templates for the eight roles |
 | [`methodology/wallstreet_paradigm_manual.md`](methodology/wallstreet_paradigm_manual.md) | Paradigm manual: research logic, evidence discipline, red flags |
 | [`templates/styles/README.md`](templates/styles/README.md) | Layout fields and how to author your own |

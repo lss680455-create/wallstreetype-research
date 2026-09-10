@@ -30,18 +30,19 @@ import chart_style as cs  # noqa: E402
 # --------------------------------------------------------------------------
 STAGES = [
     ("S0", "Intake", "Editor", "brief/intake.json", "G0"),
-    ("S1", "Input & Envelope", "Editor", "envelope.json", "G0b"),
-    ("S2", "Master Brief", "Editor", "briefs/master_brief.md", "G0c"),
-    ("S3", "Parallel Research", "3 children", "data · industry · valuation", "G1"),
-    ("S4", "Red Team Challenge", "1 child", "review/redteam.md", "G2"),
-    ("S5", "Adjudication", "Editor", "decisions/decision.json", "G3"),
-    ("S6", "Charting", "1 child", "charts/manifest.json", "G4"),
-    ("S7", "Layout & Assembly", "1 child", "draft/report_draft.md", "G5"),
-    ("S8", "Final Review", "Editor", "final/report.md", "G6"),
-    ("S9", "Proofing & QC", "Editor + vision", "proof/visual_proofing.md", "G7"),
+    ("S1", "Industry Logic", "Editor", "brief/industry_logic.md", "G0b"),
+    ("S2", "Input & Envelope", "Editor", "envelope.json", "G0c"),
+    ("S3", "Master Brief", "Editor", "briefs/master_brief.md", "G0d"),
+    ("S4", "Parallel Research", "3 children", "data · industry · valuation", "G1"),
+    ("S5", "Red Team Challenge", "1 child", "review/redteam.md", "G2"),
+    ("S6", "Adjudication", "Editor", "decisions/decision.json", "G3"),
+    ("S7", "Charting", "1 child", "charts/manifest.json", "G4"),
+    ("S8", "Layout & Assembly", "1 child", "draft/report_draft.md", "G5"),
+    ("S9", "Final Review", "Editor", "final/report.md", "G6"),
+    ("S10", "Proofing & QC", "Editor + vision", "proof/visual_proofing.md", "G7"),
 ]
 
-FEATURES = ["US + A-share", "zero API keys", "5 chart families", "6 layouts", "S0-S9 pipeline"]
+FEATURES = ["US + A-share", "zero API keys", "5 chart families", "6 layouts", "S0-S10 pipeline"]
 
 
 # --------------------------------------------------------------------------
@@ -117,7 +118,7 @@ def architecture(out: Path = HERE / "architecture.png") -> Path:
     ax.set_ylim(0, 1)
     fig.patch.set_facecolor("white")
 
-    ax.text(0.02, 0.952, "Ten-stage research pipeline", fontsize=16,
+    ax.text(0.02, 0.952, "Eleven-stage research pipeline", fontsize=16,
             color=cs.NAVY_DARK, va="center", fontproperties=cs.font_prop(16, weight="bold"))
     ax.text(0.02, 0.908, "Gates G0–G7 sit between stages; failing a gate sends the stage back.",
             fontsize=9.2, color=cs.GRAY, va="center", fontproperties=cs.font_prop(9.2))

@@ -9,7 +9,7 @@ Records the two answers the pipeline needs BEFORE a run starts:
   2. the research focus questionnaire (focus / horizon / depth / language /
      chart density / special requests).
 
-It writes `brief/intake.json` — the artifact consumed by S1 (envelope), the
+It writes `brief/intake.json` — the artifact consumed by S2 (envelope), the
 analyst briefs, the Red Team, the Chart Specialist and the Layout Specialist.
 See `pipeline/intake.md` for the full questionnaire and injection rules.
 
@@ -331,7 +331,7 @@ def main(argv=None) -> int:
     print("[intake] wrote    : %s" % out_path)
     print("[intake] content  :")
     print(json.dumps(payload, ensure_ascii=False, indent=2))
-    print("[intake] next     : S1 — build envelope.json from this file (see pipeline/intake.md §Injection).")
+    print("[intake] next     : S2 — build envelope.json from this file (see pipeline/intake.md §Injection).")
     return 0
 
 

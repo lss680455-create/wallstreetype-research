@@ -1,0 +1,102 @@
+{
+  "example": true,
+  "note": "Filled sample of the S1 direction contract, retro-fitted to this case so the format is not a promise on paper. In a real run these six answers are typed by the person commissioning the report; here they were confirmed by the repo author acting as that person. The gate (scripts/intake/direction_check.py --check) is deliberately strict about who answered: an agent-filled default fails G0b.",
+  "ticker": "688836.SH",
+  "comparison": "NVDA",
+  "as_of": "2026-09-09",
+  "view": "fundamental",
+  "view_note": "The ask is an industrial question ('can it overtake NVIDIA'), but it only becomes checkable when stated as a 6–12 month fundamental question with an explicit valuation window.",
+  "primary_driver": "humanoid & quadruped shipment volume × realised ASP",
+  "driver_tags": [
+    {
+      "driver": "humanoid & quadruped shipment volume × realised ASP",
+      "tag": "direct",
+      "proxy": "period revenue and disclosed unit/ASP commentary in filings (FY2025 revenue ¥16.99亿, yoy 332.6%)"
+    },
+    {
+      "driver": "gross margin on delivered units",
+      "tag": "direct",
+      "proxy": "disclosed gross margin per period (FY2025 60.4% → H1 2026 56.0%)"
+    },
+    {
+      "driver": "AI/robotics platform narrative",
+      "tag": "theme",
+      "proxy": "peer multiples and sector index — moves the multiple, never counted as Unitree revenue"
+    },
+    {
+      "driver": "accelerator demand",
+      "tag": "direct",
+      "proxy": "NVIDIA data-centre revenue — direct for NVDA, a BOM cost line for Unitree"
+    }
+  ],
+  "assumption_anchor": "historical_extrapolation",
+  "assumption_note": "Base case extrapolates the FY2023–FY2025 revenue path at 60% growth (see catch_up_years in data/numbers.json); no sell-side consensus is available for a company listed 2026-08-19.",
+  "competitive_set": [
+    "other humanoid integrators (peer startups on the same input stack)",
+    "industrial automation / quadruped incumbents",
+    "the compute layer (NVIDIA) — recorded here to state explicitly that it is a supplier, not a competitor"
+  ],
+  "falsification": "two consecutive reporting periods with unit growth below the trajectory implied by the FY2023–FY2025 revenue path, or gross margin eroding further below the H1 2026 level of 56.0%",
+  "output_orientation": {
+    "orientation": "valuation-driven",
+    "emphasis": ["growth", "risk"]
+  },
+  "answers": [
+    {
+      "q": "Q1",
+      "field": "view",
+      "answer": "fundamental",
+      "answered_by": "user",
+      "note": "6–12 month fundamental view: the multiple is the subject, the industry story is the setting."
+    },
+    {
+      "q": "Q2",
+      "field": "primary_driver",
+      "answer": "humanoid & quadruped shipment volume × realised ASP",
+      "answered_by": "user",
+      "note": "Axis of the report. The robotics narrative is explicitly demoted to a theme driver."
+    },
+    {
+      "q": "Q3",
+      "field": "assumption_anchor",
+      "answer": "historical_extrapolation",
+      "answered_by": "user",
+      "note": "60% growth base case; bull/bear at 100% and 30%."
+    },
+    {
+      "q": "Q4",
+      "field": "competitive_set",
+      "answer": [
+        "other humanoid integrators",
+        "industrial automation / quadruped incumbents",
+        "compute layer listed as a non-competitor"
+      ],
+      "answered_by": "user",
+      "note": "Keeps NVIDIA in the peer table as a supplier, so the comparison chart does not silently frame it as a rival."
+    },
+    {
+      "q": "Q5",
+      "field": "falsification",
+      "answer": "unit growth below the FY2023–FY2025 implied path for two consecutive periods, or further gross-margin erosion",
+      "answered_by": "user",
+      "note": "Handed to the red team as its brief and printed on the risk page."
+    },
+    {
+      "q": "Q6",
+      "field": "output_orientation",
+      "answer": {"orientation": "valuation-driven", "emphasis": ["growth", "risk"]},
+      "answered_by": "user",
+      "note": "Skeleton led by valuation, with the risk section given equal weight to the growth case."
+    },
+    {
+      "q": "Q0-extra",
+      "field": "claim_discipline",
+      "answer": "no policy or theme claim may enter the report without a transmission chain with an observable proxy per hop",
+      "answered_by": "user",
+      "note": "Standing rule carried over from this user's review of earlier drafts."
+    }
+  ],
+  "direction_assumed": false,
+  "assumed_values": [],
+  "created_at": "2026-09-10T06:10:00+08:00"
+}

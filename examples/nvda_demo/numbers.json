@@ -1,5 +1,5 @@
 {
- "_comment": "数字引用表 (number reference table) for the NVDA demo report. Consumed by the S9 vision proofing: every declared number is cross-checked against the data JSON layer on the rendered pages. Paths are relative to this file's directory.",
+ "_comment": "数字引用表 (number reference table) for the NVDA demo report. Consumed by the S10 vision proofing: every declared number is cross-checked against the data JSON layer on the rendered pages. Paths are relative to this file's directory.",
  "data_files": [
   "data/nvda_quote.json",
   "data/nvda_financials.json",

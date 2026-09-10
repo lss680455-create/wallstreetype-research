@@ -3,6 +3,7 @@ name: wallstreetype-research
 description: >
   Use when 需要生成华尔街风格股票研报/深度投研报告/投资研究流水线。
   Full-chain, agent-agnostic equity research: S0 task intake (layout template + focus questionnaire),
+  S1 industry-logic mapping with 5–6 direction-confirmation questions (gate G0b),
   100-report-derived paradigm manual, multi-agent pipeline briefs (EN+ZH),
   dual-market real data scripts (US Yahoo / CN Tencent-Eastmoney),
   institutional charts, Wall Street docx/PDF layout. Works with any AI tool or manually.
@@ -28,11 +29,13 @@ metadata:
 | 范式手册 | `methodology/wallstreet_paradigm_manual.md` | 7章：论证骨架/方法总库/行文范式/图表规范/证据纪律/红旗清单/红队质询库 |
 | 100篇清单 | `methodology/report_list_100.md` | 可溯源的方法论种子库 |
 | 组凝练 | `methodology/digests/group1..10.md` | 每篇五维凝练（方法/行文/图表/动作/教训） |
-| 流水线设计 | `pipeline/pipeline_orchestration.md` | S0–S9 全链路（intake→envelope→简报→并行研究→红队→仲裁→图表→排版→交付→视觉质检） |
+| 流水线设计 | `pipeline/pipeline_orchestration.md` | S0–S10 全链路（intake→产业逻辑梳理+方向确认→envelope→简报→并行研究→红队→仲裁→图表→排版→交付→视觉质检） |
 | S0 意向采集 | `pipeline/intake.md` | 任务前交互层：模板选择 + 侧重方向问卷（中英双语，agent 无关） |
+| S1 产业逻辑梳理 | `pipeline/logic_mapping.md` | 开工前定逻辑方向：五步产业逻辑图（收入结构/产业链位置/驱动变量/传导链/周期位置）+ **5–6 个方向确认问题**（期限·主线变量·假设锚点·真对手·证伪条件·产出取向），门禁 G0b |
 | 模板目录 | `templates/styles/` | 六套版式模板 JSON（硬朗/克制/厚重/青蓝/黑白/极简）+ README 目录、schema 与免责声明 |
 | Intake CLI | `scripts/intake/intake.py` | `--list` 列模板；一行命令写 `brief/intake.json`（纯标准库、无第三方依赖） |
-| 角色brief | `pipeline/agent_prompts.md` | 6角色 × 中英双语 直接复制的 prompt，含质量门 |
+| 方向契约 CLI | `scripts/intake/direction_check.py` | S1 门禁 G0b：`--questions` 打印六问；`--skeleton` 生成模板；`--check` 校验已填文件（纯标准库） |
+| 角色brief | `pipeline/agent_prompts.md` | 7 个角色简报（中英双语，可直接复制的 prompt）+ 主编操作协议 |
 | 数据层 | `scripts/data/` | 美股 Yahoo / A股 腾讯+东财，纯 requests，`python data_fetcher.py <us|cn> <代码> <quote|history|financials|all>` |
 | 图表层 | `scripts/charts/` | 五类机构图表（K线+量+MACD / PE band / 财务趋势 / 情景 / 同业对比），500dpi，中文自动字体 |
 | 排版层 | `templates/` | `report_template.md`（华尔街母版）+ `md_to_docx.py`（→docx/PDF） |
@@ -55,12 +58,17 @@ python templates/md_to_docx.py examples/layout_demo/example_report.md -o report.
 1. **S0 Intake**：按 `pipeline/intake.md` 先让用户选版式模板（六套之一，可混搭）并回答侧重方向问卷
    （研究侧重/期限/深度/语言/图表密度/特殊要求），落盘 `brief/intake.json`（或直接跑
    `python scripts/intake/intake.py ...`）；答案注入后续研究与写作。
-2. 选深度档位：`quick`（无图1页）/ `standard` / `deep`（全链）——默认取 intake 的 `depth`。
-3. 主 agent 按 `pipeline/pipeline_orchestration.md` 的 S0–S9 阶段驱动；每个子角色 brief 在
+2. **S1 产业逻辑梳理 + 方向确认**：按 `pipeline/logic_mapping.md` 先梳理产业逻辑（公司靠什么赚钱 /
+   产业链位置与定价权 / 驱动变量 direct 或 theme / 逐步带可观测代理指标的传导链 / 周期位置），
+   再向用户提 **5–6 个方向确认问题**并落盘 `brief/direction_confirmed.json`；跑
+   `python scripts/intake/direction_check.py --check brief/direction_confirmed.json` 过门禁 G0b
+   **才开 S2**——用户没答的方向不得静默默认。
+3. 选深度档位：`quick`（无图1页）/ `standard` / `deep`（全链）——默认取 intake 的 `depth`。
+4. 主 agent 按 `pipeline/pipeline_orchestration.md` 的 S0–S10 阶段驱动；每个子角色 brief 在
    `pipeline/agent_prompts.md`（中英双语，直接复制）。
-4. 机械工作（取数/绘图/排版）交给 `scripts/` 与 `templates/` 的独立 Python 脚本——agent 不手打数据；
+5. 机械工作（取数/绘图/排版）交给 `scripts/` 与 `templates/` 的独立 Python 脚本——agent 不手打数据；
    排版用 `--style <intake.template_id>`。
-5. 主编仲裁必须保留 minority report；红队结论写进风险章节；每张图带 Exhibit 编号与来源脚注。
+6. 主编仲裁必须保留 minority report；红队结论写进风险章节；每张图带 Exhibit 编号与来源脚注。
 
 ## 关键纪律（来自范式手册，写进每个 brief）
 

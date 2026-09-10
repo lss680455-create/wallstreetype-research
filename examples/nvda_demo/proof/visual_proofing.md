@@ -1,8 +1,8 @@
-# S9 Vision Proofing Record — NVDA Demo Report
+# S10 Vision Proofing Record — NVDA Demo Report
 
 - **Artifact:** `examples/nvda_demo/nvda_report.pdf` (9 pages) + `nvda_report.docx`
 - **Method:** PDF rendered page-by-page to `pages/page_01..09.png` (pymupdf, dpi=144), then every page
-  inspected by a **vision-capable model** (this is the S9 gate — layout is never judged from text alone).
+  inspected by a **vision-capable model** (this is the S10 gate — layout is never judged from text alone).
 - **Number cross-check:** every core number on the pages verified against `data/numbers.json` (数字引用表).
 - **Date:** 2026-09-10
 

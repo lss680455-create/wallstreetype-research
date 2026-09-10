@@ -18,5 +18,5 @@ markdown>=3.5
 docx2pdf>=0.1.8       # optional: --pdf output (requires MS Word on Windows)
 
 # --- Optional extras ---
-pymupdf>=1.24         # optional: render PDF pages for the S9 visual proofing gate
+pymupdf>=1.24         # optional: render PDF pages for the S10 visual proofing gate
 # finplot>=1.8.2      # interactive alternative for chart exploration (not required)
